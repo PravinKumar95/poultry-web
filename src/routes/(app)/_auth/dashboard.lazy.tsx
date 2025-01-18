@@ -1,4 +1,4 @@
-import { AppSidebar } from "@/components/nav/app-sidebar";
+import { AppSidebar } from '@/components/nav/app-sidebar'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -6,18 +6,18 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Separator } from "@/components/ui/separator";
+} from '@/components/ui/breadcrumb'
+import { Separator } from '@/components/ui/separator'
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
-} from "@/components/ui/sidebar";
-import { createLazyFileRoute } from "@tanstack/react-router";
+} from '@/components/ui/sidebar'
+import { createLazyFileRoute } from '@tanstack/react-router'
 
-export const Route = createLazyFileRoute("/(app)/dashboard")({
+export const Route = createLazyFileRoute('/(app)/_auth/dashboard')({
   component: Dashboard,
-});
+})
 
 function Dashboard() {
   return (
@@ -53,5 +53,5 @@ function Dashboard() {
         </div>
       </SidebarInset>
     </SidebarProvider>
-  );
+  )
 }
