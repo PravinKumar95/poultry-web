@@ -22,6 +22,7 @@ import { z } from "zod";
 import { useAuth } from "@/context/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler } from "react-hook-form";
+import { redirect } from "@tanstack/react-router";
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -50,6 +51,8 @@ export function LoginForm({
     password,
   }) => {
     await auth.signin(email, password);
+    // eslint-disable-next-line @typescript-eslint/only-throw-error
+    throw redirect({ to: "/" });
   };
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
