@@ -8,13 +8,54 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import Logo from "../brand/logo";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "../ui/form";
+import { z } from "zod";
+import { useAuth } from "@/context/auth";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useNavigate } from "@tanstack/react-router";
+import { useForm, SubmitHandler } from "react-hook-form";
+
+const formSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8, {
+    message: "Please must me alteast 8 characters",
+  }),
+});
+
+type SignInSchema = z.infer<typeof formSchema>;
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
+  const auth = useAuth();
+  const navigate = useNavigate();
+  const form = useForm<SignInSchema>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  const handleSignIn: SubmitHandler<SignInSchema> = async ({
+    email,
+    password,
+  }) => {
+    await auth.signin(email, password);
+    await navigate({
+      to: "/",
+    });
+  };
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Logo />
@@ -26,40 +67,58 @@ export function LoginForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form>
-            <div className="flex flex-col gap-6">
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  required
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSignIn)}>
+              <div className="flex flex-col gap-6">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input placeholder="x@ymail.com" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        Please enter your email address
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-center">
+                        <FormLabel>Password</FormLabel>
+                        <a
+                          href="#"
+                          className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
+                        >
+                          Forgot your password?
+                        </a>
+                      </div>
+                      <FormControl>
+                        <Input type="password" required {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" className="w-full">
+                  Login
+                </Button>
               </div>
-              <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                  <a
-                    href="#"
-                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                  >
-                    Forgot your password?
-                  </a>
-                </div>
-                <Input id="password" type="password" required />
+              <div className="mt-4 text-center text-sm">
+                Don&apos;t have an account?
+                <a href="/signup" className="underline underline-offset-4">
+                  Sign up
+                </a>
               </div>
-              <Button type="submit" className="w-full">
-                Login
-              </Button>
-            </div>
-            <div className="mt-4 text-center text-sm">
-              Don&apos;t have an account?
-              <a href="/signup" className="underline underline-offset-4">
-                Sign up
-              </a>
-            </div>
-          </form>
+            </form>
+          </Form>
         </CardContent>
       </Card>
     </div>
