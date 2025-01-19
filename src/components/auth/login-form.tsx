@@ -21,7 +21,6 @@ import {
 import { z } from "zod";
 import { useAuth } from "@/context/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigate } from "@tanstack/react-router";
 import { useForm, SubmitHandler } from "react-hook-form";
 
 const formSchema = z.object({
@@ -38,7 +37,6 @@ export function LoginForm({
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
   const auth = useAuth();
-  const navigate = useNavigate();
   const form = useForm<SignInSchema>({
     resolver: zodResolver(formSchema),
     defaultValues: {
