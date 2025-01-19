@@ -4,6 +4,7 @@ import { defineConfig } from "vite";
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 
 export default defineConfig({
+  base: "https://poultry-web-1f7d94.gitlab.io",
   plugins: [TanStackRouterVite(), react()],
   resolve: {
     alias: {
