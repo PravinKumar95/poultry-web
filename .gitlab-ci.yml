@@ -16,6 +16,7 @@ pages:
     - pnpm install
     - pnpm run build
     - cp -a dist/. public/
+    - echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=/" /></head><body></body></html>' > public/404.html
   artifacts:
     paths:
       - public
