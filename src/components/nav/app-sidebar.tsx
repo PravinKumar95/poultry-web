@@ -25,6 +25,7 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { supabase } from "@/lib/supabase";
 
 // This is sample data.
 const data = {
@@ -157,6 +158,16 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const [userName, setUserName] = React.useState("");
+  const [email, setEmail] = React.useState("");
+  React.useEffect(() => {
+    const fetchData = async () => {
+      const { data } = await supabase.from("profiles").select("full_name");
+      console.log(data);
+      return data;
+    };
+    fetchData().then((fullNames) => setUserName(fullNames[0].full_name));
+  }, []);
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -167,7 +178,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavProjects projects={data.projects} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={{ name: userName, email }} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

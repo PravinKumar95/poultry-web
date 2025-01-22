@@ -2,10 +2,19 @@ import { supabase } from "@/lib/supabase";
 import { Session } from "@supabase/supabase-js";
 import * as React from "react";
 
+interface SignUpOptions {
+  username?: string;
+  company?: string;
+}
+
 export interface AuthContext {
   isAuthenticated: boolean;
-  signup: (username: string, password: string) => Promise<void>;
-  signin: (username: string, password: string) => Promise<void>;
+  signup: (
+    email: string,
+    password: string,
+    options: SignUpOptions
+  ) => Promise<void>;
+  signin: (email: string, password: string) => Promise<void>;
   signout: () => Promise<void>;
 }
 
@@ -40,10 +49,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signInWithPassword({ email, password });
   };
 
-  const signup = async (email: string, password: string) => {
+  const signup = async (
+    email: string,
+    password: string,
+    options: SignUpOptions
+  ) => {
     await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: options,
+      },
     });
   };
 

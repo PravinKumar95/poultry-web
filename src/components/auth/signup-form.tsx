@@ -24,12 +24,15 @@ import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/context/auth";
 import { useNavigate } from "@tanstack/react-router";
+import { Loader } from "../ui/loader";
 
 const formSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8, {
     message: "Please must me alteast 8 characters",
   }),
+  name: z.string(),
+  company: z.string(),
 });
 
 type SignUpSchema = z.infer<typeof formSchema>;
@@ -51,8 +54,10 @@ export function SignUpForm({
   const handleSignUp: SubmitHandler<SignUpSchema> = async ({
     email,
     password,
+    name,
+    company,
   }) => {
-    await auth.signup(email, password);
+    await auth.signup(email, password, { username: name, company });
     await navigate({
       to: "/signin",
     });
@@ -104,7 +109,38 @@ export function SignUpForm({
                     </FormItem>
                   )}
                 />
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name</FormLabel>
+                      <FormControl>
+                        <Input type="text" {...field} />
+                      </FormControl>
+                      <FormDescription>Please enter your name</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="company"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Company</FormLabel>
+                      <FormControl>
+                        <Input type="text" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        Please enter your company name
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <Button type="submit" className="w-full">
+                  {form.formState.isSubmitting && <Loader />}
                   Create account
                 </Button>
               </div>

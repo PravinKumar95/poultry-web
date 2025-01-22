@@ -14,7 +14,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       <ThemeProvider defaultTheme="system" storageKey="farmiz-theme">
         <Outlet />
       </ThemeProvider>
-      <TanStackRouterDevtools />
+      <TanStackRouterDevtools position="bottom-right" />
     </>
   ),
 });
