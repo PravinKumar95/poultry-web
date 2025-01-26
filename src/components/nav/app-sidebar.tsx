@@ -1,12 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  Factory,
-  GalleryVerticalEnd,
-  Settings2,
-  TowerControl,
-} from "lucide-react";
+import { GalleryVerticalEnd, TowerControl } from "lucide-react";
 
 import { NavMain } from "@/components/nav/nav-main";
 
@@ -33,64 +28,14 @@ const data = {
   ],
   navMain: [
     {
-      title: "Poultry Farm",
-      url: "#",
-      icon: Factory,
-      isActive: true,
-      items: [
-        {
-          title: "History",
-          url: "#",
-        },
-        {
-          title: "Starred",
-          url: "#",
-        },
-        {
-          title: "Settings",
-          url: "#",
-        },
-      ],
-    },
-    {
       title: "Feed Mill",
       url: "#",
       icon: TowerControl,
+      isActive: true,
       items: [
         {
-          title: "Genesis",
-          url: "#",
-        },
-        {
-          title: "Explorer",
-          url: "#",
-        },
-        {
-          title: "Quantum",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings2,
-      items: [
-        {
-          title: "General",
-          url: "#",
-        },
-        {
-          title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
+          title: "Material Purchase",
+          url: "feed-mill/material-purchase",
         },
       ],
     },

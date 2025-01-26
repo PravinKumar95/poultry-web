@@ -22,6 +22,9 @@ const IndexLazyImport = createFileRoute('/')()
 const authSignupLazyImport = createFileRoute('/(auth)/signup')()
 const authSigninLazyImport = createFileRoute('/(auth)/signin')()
 const appAuthDashboardLazyImport = createFileRoute('/(app)/_auth/dashboard')()
+const appAuthFeedMillMaterialPurchaseLazyImport = createFileRoute(
+  '/(app)/_auth/feed-mill/material-purchase',
+)()
 
 // Create/Update Routes
 
@@ -66,6 +69,19 @@ const appAuthDashboardLazyRoute = appAuthDashboardLazyImport
   .lazy(() =>
     import('./routes/(app)/_auth/dashboard.lazy').then((d) => d.Route),
   )
+
+const appAuthFeedMillMaterialPurchaseLazyRoute =
+  appAuthFeedMillMaterialPurchaseLazyImport
+    .update({
+      id: '/feed-mill/material-purchase',
+      path: '/feed-mill/material-purchase',
+      getParentRoute: () => appAuthRoute,
+    } as any)
+    .lazy(() =>
+      import('./routes/(app)/_auth/feed-mill/material-purchase.lazy').then(
+        (d) => d.Route,
+      ),
+    )
 
 // Populate the FileRoutesByPath interface
 
@@ -113,6 +129,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof appAuthDashboardLazyImport
       parentRoute: typeof appAuthImport
     }
+    '/(app)/_auth/feed-mill/material-purchase': {
+      id: '/(app)/_auth/feed-mill/material-purchase'
+      path: '/feed-mill/material-purchase'
+      fullPath: '/feed-mill/material-purchase'
+      preLoaderRoute: typeof appAuthFeedMillMaterialPurchaseLazyImport
+      parentRoute: typeof appAuthImport
+    }
   }
 }
 
@@ -120,10 +143,13 @@ declare module '@tanstack/react-router' {
 
 interface appAuthRouteChildren {
   appAuthDashboardLazyRoute: typeof appAuthDashboardLazyRoute
+  appAuthFeedMillMaterialPurchaseLazyRoute: typeof appAuthFeedMillMaterialPurchaseLazyRoute
 }
 
 const appAuthRouteChildren: appAuthRouteChildren = {
   appAuthDashboardLazyRoute: appAuthDashboardLazyRoute,
+  appAuthFeedMillMaterialPurchaseLazyRoute:
+    appAuthFeedMillMaterialPurchaseLazyRoute,
 }
 
 const appAuthRouteWithChildren =
@@ -144,6 +170,7 @@ export interface FileRoutesByFullPath {
   '/signin': typeof authSigninLazyRoute
   '/signup': typeof authSignupLazyRoute
   '/dashboard': typeof appAuthDashboardLazyRoute
+  '/feed-mill/material-purchase': typeof appAuthFeedMillMaterialPurchaseLazyRoute
 }
 
 export interface FileRoutesByTo {
@@ -151,6 +178,7 @@ export interface FileRoutesByTo {
   '/signin': typeof authSigninLazyRoute
   '/signup': typeof authSignupLazyRoute
   '/dashboard': typeof appAuthDashboardLazyRoute
+  '/feed-mill/material-purchase': typeof appAuthFeedMillMaterialPurchaseLazyRoute
 }
 
 export interface FileRoutesById {
@@ -161,13 +189,24 @@ export interface FileRoutesById {
   '/(auth)/signin': typeof authSigninLazyRoute
   '/(auth)/signup': typeof authSignupLazyRoute
   '/(app)/_auth/dashboard': typeof appAuthDashboardLazyRoute
+  '/(app)/_auth/feed-mill/material-purchase': typeof appAuthFeedMillMaterialPurchaseLazyRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/signin' | '/signup' | '/dashboard'
+  fullPaths:
+    | '/'
+    | '/signin'
+    | '/signup'
+    | '/dashboard'
+    | '/feed-mill/material-purchase'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/signin' | '/signup' | '/dashboard'
+  to:
+    | '/'
+    | '/signin'
+    | '/signup'
+    | '/dashboard'
+    | '/feed-mill/material-purchase'
   id:
     | '__root__'
     | '/'
@@ -176,6 +215,7 @@ export interface FileRouteTypes {
     | '/(auth)/signin'
     | '/(auth)/signup'
     | '/(app)/_auth/dashboard'
+    | '/(app)/_auth/feed-mill/material-purchase'
   fileRoutesById: FileRoutesById
 }
 
@@ -222,7 +262,8 @@ export const routeTree = rootRoute
       "filePath": "(app)/_auth.tsx",
       "parent": "/(app)",
       "children": [
-        "/(app)/_auth/dashboard"
+        "/(app)/_auth/dashboard",
+        "/(app)/_auth/feed-mill/material-purchase"
       ]
     },
     "/(auth)/signin": {
@@ -233,6 +274,10 @@ export const routeTree = rootRoute
     },
     "/(app)/_auth/dashboard": {
       "filePath": "(app)/_auth/dashboard.lazy.tsx",
+      "parent": "/(app)/_auth"
+    },
+    "/(app)/_auth/feed-mill/material-purchase": {
+      "filePath": "(app)/_auth/feed-mill/material-purchase.lazy.tsx",
       "parent": "/(app)/_auth"
     }
   }

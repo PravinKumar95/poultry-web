@@ -3,7 +3,6 @@ import {
   Breadcrumb,
   BreadcrumbList,
   BreadcrumbItem,
-  BreadcrumbLink,
   BreadcrumbSeparator,
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
@@ -16,7 +15,12 @@ import {
 import { supabase } from "@/lib/supabase";
 
 import { Separator } from "@radix-ui/react-separator";
-import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
+import {
+  Outlet,
+  createFileRoute,
+  redirect,
+  useLocation,
+} from "@tanstack/react-router";
 
 export const Route = createFileRoute("/(app)/_auth")({
   beforeLoad: async () => {
@@ -32,6 +36,12 @@ export const Route = createFileRoute("/(app)/_auth")({
 });
 
 function AuthLayout() {
+  const path = useLocation({ select: (location) => location.pathname });
+  const routes = path
+    .split("/")
+    .slice(1)
+    .map((route) => route.replace("-", " "));
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -42,15 +52,26 @@ function AuthLayout() {
             <Separator orientation="vertical" className="mr-2 h-4" />
             <Breadcrumb>
               <BreadcrumbList>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">
-                    Building Your Application
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Data Fetching</BreadcrumbPage>
-                </BreadcrumbItem>
+                {routes.map((route, index) => {
+                  return (
+                    <>
+                      {index !== 0 && (
+                        <BreadcrumbSeparator className="hidden md:block" />
+                      )}
+                      <BreadcrumbItem
+                        className={
+                          index !== routes.length - 1
+                            ? "hidden md:block"
+                            : undefined
+                        }
+                      >
+                        <BreadcrumbPage className="capitalize">
+                          {route}
+                        </BreadcrumbPage>
+                      </BreadcrumbItem>
+                    </>
+                  );
+                })}
               </BreadcrumbList>
             </Breadcrumb>
           </div>
