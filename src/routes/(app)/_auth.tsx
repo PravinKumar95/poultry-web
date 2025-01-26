@@ -19,7 +19,7 @@ import { Separator } from "@radix-ui/react-separator";
 import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/(app)/_auth")({
-  beforeLoad: async ({ context }) => {
+  beforeLoad: async () => {
     const { data } = await supabase.auth.getSession();
     if (!data.session) {
       // eslint-disable-next-line @typescript-eslint/only-throw-error
