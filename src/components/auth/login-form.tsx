@@ -23,6 +23,7 @@ import { useAuth } from "@/context/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useNavigate } from "@tanstack/react-router";
+import { Loader } from "../ui/loader";
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -108,6 +109,7 @@ export function LoginForm({
                   )}
                 />
                 <Button type="submit" className="w-full">
+                  {form.formState.isSubmitting && <Loader />}
                   Login
                 </Button>
               </div>

@@ -2,22 +2,16 @@
 
 import * as React from "react";
 import {
-  AudioWaveform,
-  BookOpen,
-  Bot,
-  Command,
-  Frame,
+  Factory,
   GalleryVerticalEnd,
-  Map,
-  PieChart,
   Settings2,
-  SquareTerminal,
+  TowerControl,
 } from "lucide-react";
 
 import { NavMain } from "@/components/nav/nav-main";
-import { NavProjects } from "@/components/nav/nav-projects";
+
 import { NavUser } from "@/components/nav/nav-user";
-import { TeamSwitcher } from "@/components/nav/team-switcher";
+import { AppSwitcher } from "@/components/nav/app-switcher";
 import {
   Sidebar,
   SidebarContent,
@@ -25,37 +19,23 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { supabase } from "@/lib/supabase";
+
+import { useProfileQuery } from "@/api/hooks/profile/useProfileQuery";
 
 // This is sample data.
 const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  teams: [
+  apps: [
     {
-      name: "Acme Inc",
+      name: "Farmiz Inc",
       logo: GalleryVerticalEnd,
-      plan: "Enterprise",
-    },
-    {
-      name: "Acme Corp.",
-      logo: AudioWaveform,
-      plan: "Startup",
-    },
-    {
-      name: "Evil Corp.",
-      logo: Command,
       plan: "Free",
     },
   ],
   navMain: [
     {
-      title: "Playground",
+      title: "Poultry Farm",
       url: "#",
-      icon: SquareTerminal,
+      icon: Factory,
       isActive: true,
       items: [
         {
@@ -73,9 +53,9 @@ const data = {
       ],
     },
     {
-      title: "Models",
+      title: "Feed Mill",
       url: "#",
-      icon: Bot,
+      icon: TowerControl,
       items: [
         {
           title: "Genesis",
@@ -87,29 +67,6 @@ const data = {
         },
         {
           title: "Quantum",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Documentation",
-      url: "#",
-      icon: BookOpen,
-      items: [
-        {
-          title: "Introduction",
-          url: "#",
-        },
-        {
-          title: "Get Started",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
           url: "#",
         },
       ],
@@ -138,47 +95,21 @@ const data = {
       ],
     },
   ],
-  projects: [
-    {
-      name: "Design Engineering",
-      url: "#",
-      icon: Frame,
-    },
-    {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: PieChart,
-    },
-    {
-      name: "Travel",
-      url: "#",
-      icon: Map,
-    },
-  ],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const [userName, setUserName] = React.useState("");
-  const [email, setEmail] = React.useState("");
-  React.useEffect(() => {
-    const fetchData = async () => {
-      const { data } = await supabase.from("profiles").select("full_name");
-      console.log(data);
-      return data;
-    };
-    fetchData().then((fullNames) => setUserName(fullNames[0].full_name));
-  }, []);
+  const profileQuery = useProfileQuery();
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
+        <AppSwitcher apps={data.apps} />
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={{ name: userName, email }} />
+        <NavUser user={{ name: profileQuery.data, email: "" }} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

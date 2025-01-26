@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase";
-import { Session } from "@supabase/supabase-js";
+
 import * as React from "react";
 
 interface SignUpOptions {
@@ -8,7 +8,6 @@ interface SignUpOptions {
 }
 
 export interface AuthContext {
-  isAuthenticated: boolean;
   signup: (
     email: string,
     password: string,
@@ -21,32 +20,16 @@ export interface AuthContext {
 const AuthContext = React.createContext<AuthContext | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [session, setSession] = React.useState<Session | null>(null);
-
-  const isAuthenticated = !!session;
-
-  React.useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_OUT") {
-        setSession(null);
-      } else if (session) {
-        setSession(session);
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
   const signout = async () => {
     await supabase.auth.signOut();
   };
 
   const signin = async (email: string, password: string) => {
-    await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) throw new Error(error.message);
   };
 
   const signup = async (
@@ -64,7 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, signin, signout, signup }}>
+    <AuthContext.Provider value={{ signin, signout, signup }}>
       {children}
     </AuthContext.Provider>
   );
