@@ -24,8 +24,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useNavigate } from "@tanstack/react-router";
 import { Loader } from "../ui/loader";
+import { ErrorMessage } from "@hookform/error-message";
 
 const formSchema = z.object({
+  root: z.any(),
   email: z.string().email(),
   password: z.string().min(8, {
     message: "Please must me alteast 8 characters",
@@ -47,12 +49,19 @@ export function LoginForm({
       password: "",
     },
   });
-
+  const {
+    formState: { errors },
+  } = form;
   const handleSignIn: SubmitHandler<SignInSchema> = async ({
     email,
     password,
   }) => {
-    await auth.signin(email, password);
+    try {
+      await auth.signin(email, password);
+    } catch (e) {
+      form.setError("root", { message: e.message });
+    }
+
     await navigate({
       to: "/dashboard",
     });
@@ -108,16 +117,27 @@ export function LoginForm({
                     </FormItem>
                   )}
                 />
+                <ErrorMessage
+                  errors={errors}
+                  name="root"
+                  render={({ message }) => (
+                    <p className="text-[0.8rem] font-medium text-destructive">
+                      {message}
+                    </p>
+                  )}
+                />
                 <Button type="submit" className="w-full">
                   {form.formState.isSubmitting && <Loader />}
                   Login
                 </Button>
               </div>
               <div className="mt-4 text-center text-sm">
-                Don&apos;t have an account?
-                <a href="/signup" className="underline underline-offset-4">
-                  Sign up
-                </a>
+                <pre>
+                  Don&apos;t have an account?{" "}
+                  <a href="/signup" className="underline underline-offset-4">
+                    Sign up
+                  </a>
+                </pre>
               </div>
             </form>
           </Form>
