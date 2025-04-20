@@ -28,15 +28,20 @@ import { DataTablePagination } from "./pagination";
 import { DataTableViewOptions } from "./column-toggle";
 import { Button } from "./button";
 import { Plus } from "lucide-react";
+import AddItemDialog from "./dataTable/dialogs/AddItemDialog";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  onAdd?: () => void;
+  onEdit?: (row: TData) => void;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  onAdd = () => {},
+  onEdit = () => {},
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -67,23 +72,16 @@ export function DataTable<TData, TValue>({
   return (
     <div>
       <div className="flex py-2">
-        <Button size="sm">
-          <Plus />
-          Add
-        </Button>
-        <DataTableViewOptions table={table} />
-      </div>
-      <div className="py-2">
-        <Input
-          placeholder="Filter inventory..."
-          value={
-            (table.getColumn("material")?.getFilterValue() as string) ?? ""
+        <AddItemDialog
+          trigger={
+            <Button size="sm">
+              <Plus />
+              Add
+            </Button>
           }
-          onChange={(event) =>
-            table.getColumn("material")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm "
+          table={table}
         />
+        <DataTableViewOptions table={table} />
       </div>
       <div className="rounded-md border">
         <Table>

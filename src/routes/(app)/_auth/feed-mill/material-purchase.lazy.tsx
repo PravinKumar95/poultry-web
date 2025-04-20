@@ -1,4 +1,4 @@
-import MaterialPurchase from "@/components/inventory/FeedInventory";
+import MaterialPurchase from "@/domain/inventory/components/FeedInventory";
 import { createLazyFileRoute } from "@tanstack/react-router";
 
 export const Route = createLazyFileRoute(
