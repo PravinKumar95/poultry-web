@@ -1,14 +1,19 @@
 import { useAuth } from "./context/auth";
-import { RouterProvider, createRouter } from "@tanstack/react-router";
+import { RouterProvider, createMemoryHistory, createRouter } from "@tanstack/react-router";
 
 // Import the generated route tree
 import { routeTree } from "./routeTree.gen";
+
+const memoryHistory = createMemoryHistory({
+  initialEntries: ['/'],
+})
 // Create a new router instance
 const router = createRouter({
   routeTree,
   context: {
     auth: undefined!,
   },
+  history: memoryHistory
 });
 
 // Register the router instance for type safety
