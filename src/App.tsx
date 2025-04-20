@@ -13,7 +13,8 @@ const router = createRouter({
   context: {
     auth: undefined!,
   },
-  history: memoryHistory
+  history: memoryHistory,
+  basepath: '/poultry-web/',
 });
 
 // Register the router instance for type safety
