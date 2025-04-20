@@ -23,7 +23,7 @@ import { z } from "zod";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/context/auth";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Loader } from "../ui/loader";
 
 const formSchema = z.object({
@@ -146,9 +146,9 @@ export function SignUpForm({
               </div>
               <div className="mt-4 text-center text-sm">
                 Already have an account?{" "}
-                <a href="#" className="underline underline-offset-4">
+                <Link to="/signin" className="underline underline-offset-4">
                   Login
-                </a>
+                </Link>
               </div>
             </form>
           </Form>
