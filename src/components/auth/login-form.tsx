@@ -22,7 +22,7 @@ import { z } from "zod";
 import { useAuth } from "@/context/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Loader } from "../ui/loader";
 import { ErrorMessage } from "@hookform/error-message";
 
@@ -134,9 +134,9 @@ export function LoginForm({
               <div className="mt-4 text-center text-sm">
                 <pre>
                   Don&apos;t have an account?{" "}
-                  <a href="/signup" className="underline underline-offset-4">
+                  <Link to="/signup" className="underline underline-offset-4">
                     Sign up
-                  </a>
+                  </Link>
                 </pre>
               </div>
             </form>
