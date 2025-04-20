@@ -20,6 +20,11 @@ concurrency:
   group: 'pages'
   cancel-in-progress: true
 
+env:
+  # Setting an environment variable with the value of a configuration variable
+  VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+  VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+
 jobs:
   # Single deploy job since we're just deploying
   deploy:
