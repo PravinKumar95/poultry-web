@@ -58,7 +58,7 @@ export function LoginForm({
   }) => {
     try {
       await auth.signin(email, password);
-    } catch (e) {
+    } catch (e:any) {
       form.setError("root", { message: e.message });
     }
 
