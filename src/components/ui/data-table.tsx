@@ -30,7 +30,6 @@ import { Plus } from "lucide-react";
 import AddItemDialog from "./dataTable/dialogs/AddItemDialog";
 import {
   FieldValues,
-  Form,
   FormProvider,
   SubmitHandler,
   useForm,
@@ -54,7 +53,7 @@ export function DataTable<TData extends FieldValues, TValue>({
   const queryClient = useQueryClient();
   const { data } = useInfiniteQuery({
     queryKey: ["tableQuery", tableName],
-    queryFn: async ({ pageParam = 0 }): Promise<TData[]> => {
+    queryFn: async (): Promise<TData[]> => {
       const { data, error } = await supabase.from(tableName).select("*");
       if (error) {
         throw new Error("Network response was not ok");

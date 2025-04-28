@@ -36,8 +36,12 @@ const AddItemDialog: <TData>({
           <div className="grid gap-4 py-2">
             {table.getFlatHeaders().map((header) => {
               const headerText = header.isPlaceholder ? null : header.id;
-              const accessorKey = header.column.columnDef.accessorKey as string;
-              const isHidden = !!header.column.columnDef.meta?.isHidden;
+              const accessorKey =
+                (header.column.columnDef as { accessorKey?: string })
+                  .accessorKey || "";
+              const isHidden = !!(
+                header.column.columnDef.meta as { isHidden?: boolean }
+              )?.isHidden;
               // Skip hidden columns or columns without an accessorKey
               if (isHidden || !accessorKey) return null;
               return (
