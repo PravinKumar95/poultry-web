@@ -14,16 +14,7 @@ import {
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { DataTableColumnHeader } from "../../../components/ui/column-header";
-
-export interface FeedInventory {
-  id: string;
-  material: string;
-  paid: boolean;
-  supplier: string;
-  cost: number;
-  timestamp: Date;
-  quantity: number;
-}
+import { FeedInventory } from "../schema/FeedInventory";
 
 export const feedInventoryColumns: ColumnDef<FeedInventory>[] = [
   {

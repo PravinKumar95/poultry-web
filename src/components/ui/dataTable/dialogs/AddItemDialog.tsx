@@ -12,6 +12,7 @@ import { Button } from "../../button";
 import { Input } from "../../input";
 import { Label } from "../../label";
 import { Table } from "@tanstack/react-table";
+import { useFormContext } from "react-hook-form";
 
 interface AddItemDialogProps<TData> {
   trigger: ReactElement;
@@ -23,6 +24,7 @@ const AddItemDialog: <TData>({
   table,
   onSave,
 }: AddItemDialogProps<TData>) => JSX.Element = ({ trigger, table, onSave }) => {
+  const { register } = useFormContext();
   return (
     <Dialog>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
@@ -30,30 +32,39 @@ const AddItemDialog: <TData>({
         <DialogHeader>
           <DialogTitle>Add </DialogTitle>
         </DialogHeader>
-        <div className="grid gap-4 py-2">
-          {table &&
-            table.getFlatHeaders().map((header) => {
+        <form>
+          <div className="grid gap-4 py-2">
+            {table.getFlatHeaders().map((header) => {
               const headerText = header.isPlaceholder ? null : header.id;
+              const accessorKey = header.column.columnDef.accessorKey as string;
+              const isHidden = !!header.column.columnDef.meta?.isHidden;
+              // Skip hidden columns or columns without an accessorKey
+              if (isHidden || !accessorKey) return null;
               return (
-                !header.column.columnDef.meta?.isHidden && (
+                !isHidden && (
                   <div key={header.id} className="grid gap-2">
-                    <Label htmlFor={header.id}>{headerText}</Label>
-                    <Input id={header.id} placeholder={`Enter ${headerText}`} />
+                    <Label htmlFor={accessorKey}>{headerText}</Label>
+                    <Input
+                      id={accessorKey}
+                      placeholder={`Enter ${headerText}`}
+                      {...register(accessorKey)} // Dynamically register fields
+                    />
                   </div>
                 )
               );
             })}
-        </div>
-        <DialogFooter className="sm:justify-end">
-          <DialogClose asChild>
-            <Button variant="outline" type="button">
-              Cancel
+          </div>
+          <DialogFooter className="sm:justify-end">
+            <DialogClose asChild>
+              <Button variant="outline" type="button">
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button type="button" onClick={onSave}>
+              Save
             </Button>
-          </DialogClose>
-          <Button type="button" onClick={onSave}>
-            Save
-          </Button>
-        </DialogFooter>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
