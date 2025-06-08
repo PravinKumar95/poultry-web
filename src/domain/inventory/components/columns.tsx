@@ -136,7 +136,6 @@ export const feedInventoryColumns: ColumnDef<FeedInventory>[] = [
     meta: { isHidden: true },
     cell: ({ row }) => {
       const payment = row.original;
-
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -155,6 +154,20 @@ export const feedInventoryColumns: ColumnDef<FeedInventory>[] = [
             <DropdownMenuSeparator />
             <DropdownMenuItem>View customer</DropdownMenuItem>
             <DropdownMenuItem>View payment details</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => {
+                if (typeof window !== "undefined" && window.dispatchEvent) {
+                  window.dispatchEvent(
+                    new CustomEvent("open-edit-dialog", {
+                      detail: row.original,
+                    })
+                  );
+                }
+              }}
+            >
+              Edit
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );

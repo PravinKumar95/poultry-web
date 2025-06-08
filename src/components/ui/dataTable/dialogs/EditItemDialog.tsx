@@ -1,4 +1,4 @@
-import { ReactElement } from "react";
+import { ReactElement, useEffect } from "react";
 import {
   Dialog,
   DialogHeader,
@@ -9,38 +9,48 @@ import {
   DialogFooter,
 } from "../../dialog";
 import { Button } from "../../button";
-import { ItemDialogFields } from "./ItemDialogFields";
 import { Table } from "@tanstack/react-table";
+import { useFormContext } from "react-hook-form";
+import { ItemDialogFields } from "./ItemDialogFields";
 
-interface AddItemDialogProps<TData> {
+interface EditItemDialogProps<TData> {
   trigger: ReactElement;
   table: Table<TData>;
   onSave: () => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-  columnTypes: Record<string, string>; // key: column name, value: type (e.g., 'boolean', 'text', 'number')
+  columnTypes: Record<string, string>;
+  defaultValues: Partial<TData>;
 }
-const AddItemDialog: <TData>({
+const EditItemDialog: <TData>({
   trigger,
   table,
   onSave,
   open,
   onOpenChange,
   columnTypes,
-}: AddItemDialogProps<TData>) => JSX.Element = ({
+  defaultValues,
+}: EditItemDialogProps<TData>) => JSX.Element = ({
   trigger,
   table,
   onSave,
   open,
   onOpenChange,
   columnTypes,
+  defaultValues,
 }) => {
+  const { reset } = useFormContext();
+  useEffect(() => {
+    if (open) {
+      reset(defaultValues);
+    }
+  }, [open, defaultValues, reset]);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent aria-describedby={undefined}>
         <DialogHeader>
-          <DialogTitle>Add </DialogTitle>
+          <DialogTitle>Edit</DialogTitle>
         </DialogHeader>
         <form>
           <ItemDialogFields table={table} columnTypes={columnTypes} />
@@ -60,4 +70,4 @@ const AddItemDialog: <TData>({
   );
 };
 
-export default AddItemDialog;
+export default EditItemDialog;

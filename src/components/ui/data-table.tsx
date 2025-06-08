@@ -28,6 +28,7 @@ import { DataTableViewOptions } from "./column-toggle";
 import { Button } from "./button";
 import { Plus, Trash } from "lucide-react";
 import AddItemDialog from "./dataTable/dialogs/AddItemDialog";
+import EditItemDialog from "./dataTable/dialogs/EditItemDialog";
 import { useSupabaseColumnTypes } from "@/hooks/useSupabaseColumnTypes";
 import {
   FieldValues,
@@ -40,7 +41,7 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
+import { ApiService } from "@/api/ApiService";
 import { showSuccessToast, showErrorToast } from "@/components/ui/toast-util";
 import { Badge } from "@/components/ui/badge";
 
@@ -54,14 +55,10 @@ export function DataTable<TData extends FieldValues, TValue>({
   tableName,
 }: DataTableProps<TData, TValue>) {
   const queryClient = useQueryClient();
-  const { data } = useInfiniteQuery({
+  const { data: tableData, refetch } = useInfiniteQuery({
     queryKey: ["tableQuery", tableName],
     queryFn: async (): Promise<TData[]> => {
-      const { data, error } = await supabase.from(tableName).select("*");
-      if (error) {
-        throw new Error("Network response was not ok");
-      }
-      return data;
+      return ApiService.fetchTable(tableName);
     },
     getNextPageParam: (lastPage, pages) => {
       return lastPage.length ? pages.length : undefined;
@@ -73,11 +70,7 @@ export function DataTable<TData extends FieldValues, TValue>({
   const addMutation = useMutation({
     mutationKey: ["tableAddMut", tableName],
     mutationFn: async (newData: TData) => {
-      const { data, error } = await supabase.from(tableName).insert(newData);
-      if (error) {
-        throw new Error("Network response was not ok");
-      }
-      return data;
+      return ApiService.addRow(tableName, newData);
     },
     onSuccess: () => {
       showSuccessToast(
@@ -97,15 +90,7 @@ export function DataTable<TData extends FieldValues, TValue>({
   const deleteMutation = useMutation({
     mutationKey: ["tableDeleteMut", tableName],
     mutationFn: async (ids: Array<string | number>) => {
-      if (!ids || ids.length === 0) return;
-      const { data, error } = await supabase
-        .from(tableName)
-        .delete()
-        .in("id", ids);
-      if (error) {
-        throw new Error("Network response was not ok");
-      }
-      return data;
+      return ApiService.deleteRows(tableName, ids);
     },
     onSuccess: () => {
       showSuccessToast(
@@ -122,6 +107,47 @@ export function DataTable<TData extends FieldValues, TValue>({
       console.error("Error deleting data:", error);
     },
   });
+  const updateMutation = useMutation({
+    mutationKey: ["tableUpdateMut", tableName],
+    mutationFn: async (
+      updateData: Partial<TData> & { id: string | number }
+    ) => {
+      const { id, ...rest } = updateData;
+      const computedColumns = ["amount"];
+      let filtered = Object.fromEntries(
+        Object.entries(rest).filter(
+          ([key, value]) =>
+            !computedColumns.includes(key) &&
+            value !== undefined &&
+            (!editRow || value !== (editRow as any)[key])
+        )
+      );
+      const neverUpdate = ["created_at", "tenant_id", "id"];
+      filtered = Object.fromEntries(
+        Object.entries(filtered).filter(
+          ([key, value]) => !neverUpdate.includes(key) && value !== null
+        )
+      );
+      if (Object.keys(filtered).length === 0) return;
+      for (const key in filtered) {
+        if (filtered[key] instanceof Date) {
+          filtered[key] = filtered[key].toISOString();
+        }
+      }
+      return ApiService.updateRow(tableName, id, filtered);
+    },
+    onSuccess: () => {
+      showSuccessToast("Updated successfully!", "The item was updated.");
+      queryClient.invalidateQueries({ queryKey: ["tableQuery", tableName] });
+    },
+    onError: (error) => {
+      showErrorToast(
+        "Update failed",
+        error instanceof Error ? error.message : String(error)
+      );
+      console.error("Error updating data:", error);
+    },
+  });
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -130,8 +156,10 @@ export function DataTable<TData extends FieldValues, TValue>({
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
   const [addDialogOpen, setAddDialogOpen] = React.useState(false);
+  const [editDialogOpen, setEditDialogOpen] = React.useState(false);
+  const [editRow, setEditRow] = React.useState<TData | null>(null);
   const table = useReactTable({
-    data: data?.pages[0] || [],
+    data: tableData?.pages[0] || [],
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -149,6 +177,7 @@ export function DataTable<TData extends FieldValues, TValue>({
     },
   });
   const form = useForm<TData>();
+  const editForm = useForm<TData>();
   const columnTypes = useSupabaseColumnTypes(tableName);
   const handleAdd: SubmitHandler<TData> = (newRow) => {
     addMutation.mutate(newRow, {
@@ -167,6 +196,35 @@ export function DataTable<TData extends FieldValues, TValue>({
       deleteMutation.mutate(selectedRowIds);
     }
   };
+  const handleEdit = (row: TData) => {
+    setEditRow(row);
+    setEditDialogOpen(true);
+    setTimeout(() => editForm.reset(row), 0); // ensure form context is ready
+  };
+  const handleEditSave = editForm.handleSubmit((values) => {
+    if (editRow && (editRow as any).id) {
+      updateMutation.mutate(
+        { ...values, id: (editRow as any).id },
+        {
+          onSuccess: () => {
+            setEditDialogOpen(false);
+            setEditRow(null);
+            editForm.reset();
+            // Force a refetch to ensure UI updates
+            refetch();
+          },
+        }
+      );
+    }
+  });
+  React.useEffect(() => {
+    const handler = (e: any) => {
+      setEditRow(e.detail);
+      setEditDialogOpen(true);
+    };
+    window.addEventListener("open-edit-dialog", handler);
+    return () => window.removeEventListener("open-edit-dialog", handler);
+  }, []);
   return (
     <FormProvider {...form}>
       <div>
@@ -185,6 +243,18 @@ export function DataTable<TData extends FieldValues, TValue>({
             onSave={form.handleSubmit((values) => {
               handleAdd(values);
             })}
+          />
+          <EditItemDialog
+            open={editDialogOpen}
+            onOpenChange={(open) => {
+              setEditDialogOpen(open);
+              if (!open) setEditRow(null);
+            }}
+            trigger={<></>}
+            table={table}
+            columnTypes={columnTypes}
+            onSave={handleEditSave}
+            defaultValues={editRow || {}}
           />
           <Button
             size="sm"
@@ -251,6 +321,15 @@ export function DataTable<TData extends FieldValues, TValue>({
                         </TableCell>
                       );
                     })}
+                    <TableCell>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEdit(row.original)}
+                      >
+                        Edit
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))
               ) : (
