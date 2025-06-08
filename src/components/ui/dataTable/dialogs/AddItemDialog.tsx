@@ -18,15 +18,25 @@ interface AddItemDialogProps<TData> {
   trigger: ReactElement;
   table: Table<TData>;
   onSave: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 const AddItemDialog: <TData>({
   trigger,
   table,
   onSave,
-}: AddItemDialogProps<TData>) => JSX.Element = ({ trigger, table, onSave }) => {
+  open,
+  onOpenChange,
+}: AddItemDialogProps<TData>) => JSX.Element = ({
+  trigger,
+  table,
+  onSave,
+  open,
+  onOpenChange,
+}) => {
   const { register } = useFormContext();
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent>
         <DialogHeader>

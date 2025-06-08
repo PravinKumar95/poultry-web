@@ -112,6 +112,7 @@ export function DataTable<TData extends FieldValues, TValue>({
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+  const [addDialogOpen, setAddDialogOpen] = React.useState(false);
   const table = useReactTable({
     data: data?.pages[0] || [],
     columns,
@@ -132,8 +133,12 @@ export function DataTable<TData extends FieldValues, TValue>({
   });
   const form = useForm<TData>();
   const handleAdd: SubmitHandler<TData> = (newRow) => {
-    addMutation.mutate(newRow);
-    form.reset();
+    addMutation.mutate(newRow, {
+      onSuccess: () => {
+        setAddDialogOpen(false);
+        form.reset();
+      },
+    });
   };
   const handleDelete = () => {
     // Get selected rows from the table
@@ -149,6 +154,8 @@ export function DataTable<TData extends FieldValues, TValue>({
       <div>
         <div className="flex py-2">
           <AddItemDialog
+            open={addDialogOpen}
+            onOpenChange={setAddDialogOpen}
             trigger={
               <Button size="sm" className="mx-2">
                 <Plus />
