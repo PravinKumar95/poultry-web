@@ -42,7 +42,7 @@ const AddItemDialog: <TData>({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent>
+      <DialogContent aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>Add </DialogTitle>
         </DialogHeader>
@@ -66,7 +66,7 @@ const AddItemDialog: <TData>({
                       <div className="flex items-center gap-2">
                         <Checkbox id={accessorKey} {...register(accessorKey)} />
                         <span
-                          className="text-sm font-medium cursor-pointer"
+                          className="text-sm font-medium cursor-pointer select-none"
                           onClick={() =>
                             document.getElementById(accessorKey)?.click()
                           }

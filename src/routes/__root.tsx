@@ -37,4 +37,15 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       </Suspense>
     </>
   ),
+  notFoundComponent: () => (
+    <div className="flex flex-col items-center justify-center h-full py-20">
+      <h1 className="text-3xl font-bold mb-4">404 - Not Found</h1>
+      <p className="text-muted-foreground mb-4">
+        The page you are looking for does not exist.
+      </p>
+      <a href="/" className="text-primary underline">
+        Go Home
+      </a>
+    </div>
+  ),
 });
