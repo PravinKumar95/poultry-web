@@ -26,7 +26,7 @@ import React from "react";
 import { DataTablePagination } from "./pagination";
 import { DataTableViewOptions } from "./column-toggle";
 import { Button } from "./button";
-import { Plus } from "lucide-react";
+import { Plus, Trash } from "lucide-react";
 import AddItemDialog from "./dataTable/dialogs/AddItemDialog";
 import {
   FieldValues,
@@ -68,7 +68,7 @@ export function DataTable<TData extends FieldValues, TValue>({
     initialPageParam: 0,
   });
   const addMutation = useMutation({
-    mutationKey: ["tableMut", tableName],
+    mutationKey: ["tableAddMut", tableName],
     mutationFn: async (newData: TData) => {
       const { data, error } = await supabase.from(tableName).insert(newData);
       if (error) {
@@ -82,6 +82,27 @@ export function DataTable<TData extends FieldValues, TValue>({
     },
     onError: (error) => {
       console.error("Error inserting data:", error);
+    },
+  });
+  const deleteMutation = useMutation({
+    mutationKey: ["tableDeleteMut", tableName],
+    mutationFn: async (ids: Array<string | number>) => {
+      if (!ids || ids.length === 0) return;
+      const { data, error } = await supabase
+        .from(tableName)
+        .delete()
+        .in("id", ids);
+      if (error) {
+        throw new Error("Network response was not ok");
+      }
+      return data;
+    },
+    onSuccess: (data) => {
+      console.log("Data deleted successfully:", data);
+      queryClient.invalidateQueries({ queryKey: ["tableQuery", tableName] });
+    },
+    onError: (error) => {
+      console.error("Error deleting data:", error);
     },
   });
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -114,13 +135,22 @@ export function DataTable<TData extends FieldValues, TValue>({
     addMutation.mutate(newRow);
     form.reset();
   };
+  const handleDelete = () => {
+    // Get selected rows from the table
+    const selectedRows = table.getSelectedRowModel().rows;
+    // Extract the actual database IDs from the selected rows
+    const selectedRowIds = selectedRows.map((row) => row.original.id);
+    if (selectedRowIds.length > 0) {
+      deleteMutation.mutate(selectedRowIds);
+    }
+  };
   return (
     <FormProvider {...form}>
       <div>
         <div className="flex py-2">
           <AddItemDialog
             trigger={
-              <Button size="sm">
+              <Button size="sm" className="mx-2">
                 <Plus />
                 Add
               </Button>
@@ -130,6 +160,15 @@ export function DataTable<TData extends FieldValues, TValue>({
               handleAdd(values);
             })}
           />
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={Object.keys(rowSelection).length === 0}
+          >
+            <Trash />
+            Delete
+          </Button>
           <DataTableViewOptions table={table} />
         </div>
         <div className="rounded-md border">

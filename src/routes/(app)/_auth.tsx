@@ -59,6 +59,7 @@ function AuthLayout() {
                         <BreadcrumbSeparator className="hidden md:block" />
                       )}
                       <BreadcrumbItem
+                        key={route}
                         className={
                           index !== routes.length - 1
                             ? "hidden md:block"
