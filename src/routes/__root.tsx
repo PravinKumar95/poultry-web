@@ -5,6 +5,7 @@ import type { AuthContext } from "@/context/auth";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/api/queryClient";
 import React, { Suspense } from "react";
+import { Toaster } from "@/components/ui/sonner";
 
 interface RouterContext {
   auth: AuthContext;
@@ -28,6 +29,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       <ThemeProvider defaultTheme="system" storageKey="farmiz-theme">
         <QueryClientProvider client={queryClient}>
           <Outlet />
+          <Toaster />
         </QueryClientProvider>
       </ThemeProvider>
       <Suspense>

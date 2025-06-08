@@ -40,6 +40,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import { showSuccessToast, showErrorToast } from "@/components/ui/toast-util";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -76,11 +77,12 @@ export function DataTable<TData extends FieldValues, TValue>({
       }
       return data;
     },
-    onSuccess: (data) => {
-      console.log("Data inserted successfully:", data);
+    onSuccess: () => {
+      showSuccessToast("Added successfully!", "The item was added to the table.");
       queryClient.invalidateQueries({ queryKey: ["tableQuery", tableName] });
     },
     onError: (error) => {
+      showErrorToast("Add failed", error instanceof Error ? error.message : String(error));
       console.error("Error inserting data:", error);
     },
   });
@@ -97,11 +99,12 @@ export function DataTable<TData extends FieldValues, TValue>({
       }
       return data;
     },
-    onSuccess: (data) => {
-      console.log("Data deleted successfully:", data);
+    onSuccess: () => {
+      showSuccessToast("Deleted successfully!", "The selected item(s) were deleted.");
       queryClient.invalidateQueries({ queryKey: ["tableQuery", tableName] });
     },
     onError: (error) => {
+      showErrorToast("Delete failed", error instanceof Error ? error.message : String(error));
       console.error("Error deleting data:", error);
     },
   });
