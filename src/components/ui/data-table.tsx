@@ -42,6 +42,7 @@ import {
 } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { showSuccessToast, showErrorToast } from "@/components/ui/toast-util";
+import { Badge } from "@/components/ui/badge";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -79,11 +80,17 @@ export function DataTable<TData extends FieldValues, TValue>({
       return data;
     },
     onSuccess: () => {
-      showSuccessToast("Added successfully!", "The item was added to the table.");
+      showSuccessToast(
+        "Added successfully!",
+        "The item was added to the table."
+      );
       queryClient.invalidateQueries({ queryKey: ["tableQuery", tableName] });
     },
     onError: (error) => {
-      showErrorToast("Add failed", error instanceof Error ? error.message : String(error));
+      showErrorToast(
+        "Add failed",
+        error instanceof Error ? error.message : String(error)
+      );
       console.error("Error inserting data:", error);
     },
   });
@@ -101,11 +108,17 @@ export function DataTable<TData extends FieldValues, TValue>({
       return data;
     },
     onSuccess: () => {
-      showSuccessToast("Deleted successfully!", "The selected item(s) were deleted.");
+      showSuccessToast(
+        "Deleted successfully!",
+        "The selected item(s) were deleted."
+      );
       queryClient.invalidateQueries({ queryKey: ["tableQuery", tableName] });
     },
     onError: (error) => {
-      showErrorToast("Delete failed", error instanceof Error ? error.message : String(error));
+      showErrorToast(
+        "Delete failed",
+        error instanceof Error ? error.message : String(error)
+      );
       console.error("Error deleting data:", error);
     },
   });
@@ -211,14 +224,33 @@ export function DataTable<TData extends FieldValues, TValue>({
                     key={row.id}
                     data-state={row.getIsSelected() && "selected"}
                   >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
+                    {row.getVisibleCells().map((cell) => {
+                      const accessorKey = (
+                        cell.column.columnDef as { accessorKey?: string }
+                      )?.accessorKey;
+                      const isBoolean =
+                        accessorKey && columnTypes[accessorKey] === "boolean";
+                      const value = cell.getValue();
+                      return (
+                        <TableCell key={cell.id}>
+                          {isBoolean ? (
+                            <Badge
+                              className={
+                                value ? "bg-green-600 text-white" : undefined
+                              }
+                              variant={value ? "default" : "destructive"}
+                            >
+                              {value ? "Yes" : "No"}
+                            </Badge>
+                          ) : (
+                            flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext()
+                            )
+                          )}
+                        </TableCell>
+                      );
+                    })}
                   </TableRow>
                 ))
               ) : (
