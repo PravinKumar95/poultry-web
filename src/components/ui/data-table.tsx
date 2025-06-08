@@ -28,6 +28,7 @@ import { DataTableViewOptions } from "./column-toggle";
 import { Button } from "./button";
 import { Plus, Trash } from "lucide-react";
 import AddItemDialog from "./dataTable/dialogs/AddItemDialog";
+import { useSupabaseColumnTypes } from "@/hooks/useSupabaseColumnTypes";
 import {
   FieldValues,
   FormProvider,
@@ -135,6 +136,7 @@ export function DataTable<TData extends FieldValues, TValue>({
     },
   });
   const form = useForm<TData>();
+  const columnTypes = useSupabaseColumnTypes(tableName);
   const handleAdd: SubmitHandler<TData> = (newRow) => {
     addMutation.mutate(newRow, {
       onSuccess: () => {
@@ -166,6 +168,7 @@ export function DataTable<TData extends FieldValues, TValue>({
               </Button>
             }
             table={table}
+            columnTypes={columnTypes}
             onSave={form.handleSubmit((values) => {
               handleAdd(values);
             })}

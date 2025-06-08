@@ -20,6 +20,7 @@ interface AddItemDialogProps<TData> {
   onSave: () => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  columnTypes: Record<string, string>; // key: column name, value: type (e.g., 'boolean', 'text', 'number')
 }
 const AddItemDialog: <TData>({
   trigger,
@@ -27,12 +28,14 @@ const AddItemDialog: <TData>({
   onSave,
   open,
   onOpenChange,
+  columnTypes,
 }: AddItemDialogProps<TData>) => JSX.Element = ({
   trigger,
   table,
   onSave,
   open,
   onOpenChange,
+  columnTypes,
 }) => {
   const { register } = useFormContext();
   return (
@@ -54,15 +57,25 @@ const AddItemDialog: <TData>({
               )?.isHidden;
               // Skip hidden columns or columns without an accessorKey
               if (isHidden || !accessorKey) return null;
+              const colType = columnTypes[accessorKey];
               return (
                 !isHidden && (
                   <div key={header.id} className="grid gap-2">
                     <Label htmlFor={accessorKey}>{headerText}</Label>
-                    <Input
-                      id={accessorKey}
-                      placeholder={`Enter ${headerText}`}
-                      {...register(accessorKey)} // Dynamically register fields
-                    />
+                    {colType === "boolean" ? (
+                      <input
+                        id={accessorKey}
+                        type="checkbox"
+                        {...register(accessorKey)}
+                      />
+                    ) : (
+                      <Input
+                        id={accessorKey}
+                        placeholder={`Enter ${headerText}`}
+                        type={colType === "number" ? "number" : "text"}
+                        {...register(accessorKey)} // Dynamically register fields
+                      />
+                    )}
                   </div>
                 )
               );

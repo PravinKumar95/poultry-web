@@ -21,6 +21,7 @@ import {
   redirect,
   useLocation,
 } from "@tanstack/react-router";
+import React from "react";
 
 export const Route = createFileRoute("/(app)/_auth")({
   beforeLoad: async () => {
@@ -54,12 +55,11 @@ function AuthLayout() {
               <BreadcrumbList>
                 {routes.map((route, index) => {
                   return (
-                    <>
+                    <React.Fragment key={route}>
                       {index !== 0 && (
                         <BreadcrumbSeparator className="hidden md:block" />
                       )}
                       <BreadcrumbItem
-                        key={route}
                         className={
                           index !== routes.length - 1
                             ? "hidden md:block"
@@ -70,7 +70,7 @@ function AuthLayout() {
                           {route}
                         </BreadcrumbPage>
                       </BreadcrumbItem>
-                    </>
+                    </React.Fragment>
                   );
                 })}
               </BreadcrumbList>
