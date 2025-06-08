@@ -13,6 +13,7 @@ import { Input } from "../../input";
 import { Label } from "../../label";
 import { Table } from "@tanstack/react-table";
 import { useFormContext } from "react-hook-form";
+import { Checkbox } from "../../checkbox";
 
 interface AddItemDialogProps<TData> {
   trigger: ReactElement;
@@ -61,20 +62,28 @@ const AddItemDialog: <TData>({
               return (
                 !isHidden && (
                   <div key={header.id} className="grid gap-2">
-                    <Label htmlFor={accessorKey}>{headerText}</Label>
                     {colType === "boolean" ? (
-                      <input
-                        id={accessorKey}
-                        type="checkbox"
-                        {...register(accessorKey)}
-                      />
+                      <div className="flex items-center gap-2">
+                        <Checkbox id={accessorKey} {...register(accessorKey)} />
+                        <span
+                          className="text-sm font-medium cursor-pointer"
+                          onClick={() =>
+                            document.getElementById(accessorKey)?.click()
+                          }
+                        >
+                          {headerText}
+                        </span>
+                      </div>
                     ) : (
-                      <Input
-                        id={accessorKey}
-                        placeholder={`Enter ${headerText}`}
-                        type={colType === "number" ? "number" : "text"}
-                        {...register(accessorKey)} // Dynamically register fields
-                      />
+                      <>
+                        <Label htmlFor={accessorKey}>{headerText}</Label>
+                        <Input
+                          id={accessorKey}
+                          placeholder={`Enter ${headerText}`}
+                          type={colType === "number" ? "number" : "text"}
+                          {...register(accessorKey)} // Dynamically register fields
+                        />
+                      </>
                     )}
                   </div>
                 )
