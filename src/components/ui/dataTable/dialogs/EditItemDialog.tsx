@@ -52,7 +52,7 @@ const EditItemDialog: <TData>({
         <DialogHeader>
           <DialogTitle>Edit</DialogTitle>
         </DialogHeader>
-        <form>
+        <form onSubmit={onSave}>
           <ItemDialogFields table={table} columnTypes={columnTypes} />
           <DialogFooter className="sm:justify-end">
             <DialogClose asChild>
@@ -60,9 +60,7 @@ const EditItemDialog: <TData>({
                 Cancel
               </Button>
             </DialogClose>
-            <Button type="button" onClick={onSave}>
-              Save
-            </Button>
+            <Button type="submit">Save</Button>
           </DialogFooter>
         </form>
       </DialogContent>

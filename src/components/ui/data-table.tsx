@@ -113,28 +113,7 @@ export function DataTable<TData extends FieldValues, TValue>({
       updateData: Partial<TData> & { id: string | number }
     ) => {
       const { id, ...rest } = updateData;
-      const computedColumns = ["amount"];
-      let filtered = Object.fromEntries(
-        Object.entries(rest).filter(
-          ([key, value]) =>
-            !computedColumns.includes(key) &&
-            value !== undefined &&
-            (!editRow || value !== (editRow as any)[key])
-        )
-      );
-      const neverUpdate = ["created_at", "tenant_id", "id"];
-      filtered = Object.fromEntries(
-        Object.entries(filtered).filter(
-          ([key, value]) => !neverUpdate.includes(key) && value !== null
-        )
-      );
-      if (Object.keys(filtered).length === 0) return;
-      for (const key in filtered) {
-        if (filtered[key] instanceof Date) {
-          filtered[key] = filtered[key].toISOString();
-        }
-      }
-      return ApiService.updateRow(tableName, id, filtered);
+      return ApiService.updateRow(tableName, id, rest);
     },
     onSuccess: () => {
       showSuccessToast("Updated successfully!", "The item was updated.");
@@ -145,7 +124,6 @@ export function DataTable<TData extends FieldValues, TValue>({
         "Update failed",
         error instanceof Error ? error.message : String(error)
       );
-      console.error("Error updating data:", error);
     },
   });
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -176,14 +154,14 @@ export function DataTable<TData extends FieldValues, TValue>({
       rowSelection,
     },
   });
-  const form = useForm<TData>();
+  const addForm = useForm<TData>();
   const editForm = useForm<TData>();
   const columnTypes = useSupabaseColumnTypes(tableName);
   const handleAdd: SubmitHandler<TData> = (newRow) => {
     addMutation.mutate(newRow, {
       onSuccess: () => {
         setAddDialogOpen(false);
-        form.reset();
+        addForm.reset();
       },
     });
   };
@@ -199,22 +177,48 @@ export function DataTable<TData extends FieldValues, TValue>({
   const handleEdit = (row: TData) => {
     setEditRow(row);
     setEditDialogOpen(true);
-    setTimeout(() => editForm.reset(row), 0); // ensure form context is ready
+    // Use defaultValues to ensure form is always in sync with row
+    setTimeout(() => editForm.reset({ ...row }), 0);
   };
   const handleEditSave = editForm.handleSubmit((values) => {
     if (editRow && (editRow as any).id) {
-      updateMutation.mutate(
-        { ...values, id: (editRow as any).id },
-        {
-          onSuccess: () => {
-            setEditDialogOpen(false);
-            setEditRow(null);
-            editForm.reset();
-            // Force a refetch to ensure UI updates
-            refetch();
-          },
-        }
+      const computedColumns = ["amount"];
+      const neverUpdate = ["created_at", "tenant_id", "id"];
+      let filtered = Object.fromEntries(
+        Object.entries(values).filter(
+          ([key, value]) =>
+            !computedColumns.includes(key) &&
+            !neverUpdate.includes(key) &&
+            value !== null &&
+            value !== undefined &&
+            String(value) !== String((editRow as any)[key])
+        )
       );
+      for (const key in filtered) {
+        if (filtered[key] instanceof Date) {
+          filtered[key] = filtered[key].toISOString();
+        }
+      }
+      if (Object.keys(filtered).length === 0) {
+        setEditDialogOpen(false);
+        setEditRow(null);
+        editForm.reset();
+        return;
+      }
+      const payload = Object.assign({}, filtered, {
+        id: (editRow as any).id,
+      }) as Partial<TData> & { id: string | number };
+      updateMutation.mutate(payload, {
+        onSuccess: () => {
+          setEditDialogOpen(false);
+          setEditRow(null);
+          editForm.reset();
+          refetch();
+        },
+        onError: () => {
+          // Optionally handle error here
+        },
+      });
     }
   });
   React.useEffect(() => {
@@ -226,9 +230,9 @@ export function DataTable<TData extends FieldValues, TValue>({
     return () => window.removeEventListener("open-edit-dialog", handler);
   }, []);
   return (
-    <FormProvider {...form}>
-      <div>
-        <div className="flex py-2">
+    <div>
+      <div className="flex py-2">
+        <FormProvider {...addForm}>
           <AddItemDialog
             open={addDialogOpen}
             onOpenChange={setAddDialogOpen}
@@ -240,10 +244,12 @@ export function DataTable<TData extends FieldValues, TValue>({
             }
             table={table}
             columnTypes={columnTypes}
-            onSave={form.handleSubmit((values) => {
+            onSave={addForm.handleSubmit((values) => {
               handleAdd(values);
             })}
           />
+        </FormProvider>
+        <FormProvider {...editForm}>
           <EditItemDialog
             open={editDialogOpen}
             onOpenChange={(open) => {
@@ -256,99 +262,99 @@ export function DataTable<TData extends FieldValues, TValue>({
             onSave={handleEditSave}
             defaultValues={editRow || {}}
           />
-          <Button
-            size="sm"
-            variant="destructive"
-            onClick={handleDelete}
-            disabled={Object.keys(rowSelection).length === 0}
-          >
-            <Trash />
-            Delete
-          </Button>
-          <DataTableViewOptions table={table} />
-        </div>
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
+        </FormProvider>
+        <Button
+          size="sm"
+          variant="destructive"
+          onClick={handleDelete}
+          disabled={Object.keys(rowSelection).length === 0}
+        >
+          <Trash />
+          Delete
+        </Button>
+        <DataTableViewOptions table={table} />
+      </div>
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  return (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                >
+                  {row.getVisibleCells().map((cell) => {
+                    const accessorKey = (
+                      cell.column.columnDef as { accessorKey?: string }
+                    )?.accessorKey;
+                    const isBoolean =
+                      accessorKey && columnTypes[accessorKey] === "boolean";
+                    const value = cell.getValue();
                     return (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
+                      <TableCell key={cell.id}>
+                        {isBoolean ? (
+                          <Badge
+                            className={
+                              value ? "bg-green-600 text-white" : undefined
+                            }
+                            variant={value ? "default" : "destructive"}
+                          >
+                            {value ? "Yes" : "No"}
+                          </Badge>
+                        ) : (
+                          flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )
+                        )}
+                      </TableCell>
                     );
                   })}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell) => {
-                      const accessorKey = (
-                        cell.column.columnDef as { accessorKey?: string }
-                      )?.accessorKey;
-                      const isBoolean =
-                        accessorKey && columnTypes[accessorKey] === "boolean";
-                      const value = cell.getValue();
-                      return (
-                        <TableCell key={cell.id}>
-                          {isBoolean ? (
-                            <Badge
-                              className={
-                                value ? "bg-green-600 text-white" : undefined
-                              }
-                              variant={value ? "default" : "destructive"}
-                            >
-                              {value ? "Yes" : "No"}
-                            </Badge>
-                          ) : (
-                            flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext()
-                            )
-                          )}
-                        </TableCell>
-                      );
-                    })}
-                    <TableCell>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEdit(row.original)}
-                      >
-                        Edit
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    No results.
+                  <TableCell>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleEdit(row.original)}
+                    >
+                      Edit
+                    </Button>
                   </TableCell>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-        <div className="space-x-2 py-4">
-          <DataTablePagination table={table} />
-        </div>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  No results.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
-    </FormProvider>
+      <div className="space-x-2 py-4">
+        <DataTablePagination table={table} />
+      </div>
+    </div>
   );
 }
