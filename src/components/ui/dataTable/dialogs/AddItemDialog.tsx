@@ -20,6 +20,7 @@ interface AddItemDialogProps<TData> {
   onOpenChange?: (open: boolean) => void;
   columnTypes: Record<string, string>; // key: column name, value: type (e.g., 'boolean', 'text', 'number')
 }
+
 const AddItemDialog: <TData>({
   trigger,
   table,
@@ -43,7 +44,11 @@ const AddItemDialog: <TData>({
           <DialogTitle>Add </DialogTitle>
         </DialogHeader>
         <form>
-          <ItemDialogFields table={table} columnTypes={columnTypes} mode="add" />
+          <ItemDialogFields
+            table={table}
+            columnTypes={columnTypes}
+            mode="add"
+          />
           <DialogFooter className="sm:justify-end">
             <DialogClose asChild>
               <Button variant="outline" type="button">

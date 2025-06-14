@@ -4,6 +4,7 @@ import { Checkbox } from "../../checkbox";
 import { Input } from "../../input";
 import { Label } from "../../label";
 import { Calendar28 } from "../../Calendar28";
+import { useEffect } from "react";
 
 interface ItemDialogFieldsProps<TData> {
   table: Table<TData>;
@@ -24,7 +25,13 @@ export function ItemDialogFields<TData>({
   columnTypes,
   mode,
 }: ItemDialogFieldsProps<TData>) {
-  const { register, control, getValues, setValue } = useFormContext();
+  const { register, control, getValues, setValue, reset } = useFormContext();
+
+  useEffect(() => {
+    // Reset form values when mode changes
+    reset();
+  }, [mode, reset]);
+
   return (
     <div className="grid gap-4 py-2">
       {table.getFlatHeaders().map((header) => {
