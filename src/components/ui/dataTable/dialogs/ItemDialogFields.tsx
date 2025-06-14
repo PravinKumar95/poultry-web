@@ -1,8 +1,9 @@
 import { Table } from "@tanstack/react-table";
-import { useFormContext } from "react-hook-form";
+import { useFormContext, Controller } from "react-hook-form";
 import { Checkbox } from "../../checkbox";
 import { Input } from "../../input";
 import { Label } from "../../label";
+import { Calendar28 } from "../../Calendar28";
 
 interface ItemDialogFieldsProps<TData> {
   table: Table<TData>;
@@ -10,12 +11,20 @@ interface ItemDialogFieldsProps<TData> {
   mode: "add" | "edit";
 }
 
+function getTodayDateString() {
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, "0");
+  const dd = String(today.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 export function ItemDialogFields<TData>({
   table,
   columnTypes,
   mode,
 }: ItemDialogFieldsProps<TData>) {
-  const { register } = useFormContext();
+  const { register, control, getValues, setValue } = useFormContext();
   return (
     <div className="grid gap-4 py-2">
       {table.getFlatHeaders().map((header) => {
@@ -48,6 +57,13 @@ export function ItemDialogFields<TData>({
         const show = mode === "add" ? meta?.showInAdd : meta?.showInEdit;
         if (!show || !accessorKey) return null;
         const colType = columnTypes[accessorKey];
+        // Set default value for date field in add mode
+        if (colType === "date" && mode === "add") {
+          const currentValue = getValues(accessorKey);
+          if (!currentValue) {
+            setValue(accessorKey, getTodayDateString());
+          }
+        }
         return (
           <div key={header.id} className="grid gap-2">
             {colType === "boolean" ? (
@@ -61,14 +77,27 @@ export function ItemDialogFields<TData>({
                 </span>
               </div>
             ) : colType === "date" ? (
-              <>
-                <Label htmlFor={accessorKey}>{headerText}</Label>
-                <Input
-                  id={accessorKey}
-                  type="date"
-                  {...register(accessorKey)}
-                />
-              </>
+              <Controller
+                name={accessorKey}
+                control={control}
+                render={({ field }) => (
+                  <Calendar28
+                    value={field.value ? new Date(field.value) : undefined}
+                    onChange={(date) => {
+                      field.onChange(
+                        date
+                          ? `${date.getFullYear()}-${String(
+                              date.getMonth() + 1
+                            ).padStart(2, "0")}-${String(
+                              date.getDate()
+                            ).padStart(2, "0")}`
+                          : ""
+                      );
+                    }}
+                    label={headerText}
+                  />
+                )}
+              />
             ) : (
               <>
                 <Label htmlFor={accessorKey}>{headerText}</Label>
