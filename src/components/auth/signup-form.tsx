@@ -29,7 +29,7 @@ import { Loader } from "../ui/loader";
 const formSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8, {
-    message: "Please must me alteast 8 characters",
+    message: "Password must me alteast 8 characters",
   }),
   name: z.string(),
   company: z.string(),
