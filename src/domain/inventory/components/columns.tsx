@@ -7,7 +7,12 @@ import { FeedInventory } from "../schema/FeedInventory";
 export const feedInventoryColumns: ColumnDef<FeedInventory>[] = [
   {
     id: "select",
-    meta: { showInTable: true, showInAdd: false, showInEdit: false },
+    meta: {
+      showInTable: true,
+      showInAdd: false,
+      showInEdit: false,
+      title: "Select",
+    },
     header: ({ table }) => (
       <Checkbox
         checked={

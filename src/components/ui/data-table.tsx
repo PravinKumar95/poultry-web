@@ -50,9 +50,16 @@ interface DataTableProps<TData, TValue> {
   tableName: string;
 }
 
+export function getColumnLabel(column: any) {
+  if (column.columnDef?.meta?.title) return column.columnDef.meta.title;
+  if (typeof column.columnDef?.header === "string")
+    return column.columnDef.header;
+  return column.columnDef?.id || column.columnDef?.accessorKey || "";
+}
+
 export function DataTable<TData extends FieldValues, TValue>({
   columns,
-  tableName
+  tableName,
 }: DataTableProps<TData, TValue>) {
   const queryClient = useQueryClient();
   const { data: tableData, refetch } = useInfiniteQuery({
@@ -280,24 +287,28 @@ export function DataTable<TData extends FieldValues, TValue>({
           <TableHeader className="hidden md:table-header-group">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.filter((header) => {
-                  const meta = header.column.columnDef.meta as { showInTable?: boolean };
-                  // Always show 'select' column
-                  if (header.column.id === 'select') return true;
-                  return meta?.showInTable;
-                }).map((header) => (
-                  <TableHead
-                    key={header.id}
-                    className="px-2 py-2 md:px-4 md:py-3"
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                ))}
+                {headerGroup.headers
+                  .filter((header) => {
+                    const meta = header.column.columnDef.meta as {
+                      showInTable?: boolean;
+                    };
+                    // Always show 'select' column
+                    if (header.column.id === "select") return true;
+                    return meta?.showInTable;
+                  })
+                  .map((header) => (
+                    <TableHead
+                      key={header.id}
+                      className="px-2 py-2 md:px-4 md:py-3"
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  ))}
               </TableRow>
             ))}
           </TableHeader>
@@ -316,19 +327,18 @@ export function DataTable<TData extends FieldValues, TValue>({
                         {row
                           .getVisibleCells()
                           .filter((cell) => {
-                            const meta = cell.column.columnDef.meta as { showInTable?: boolean };
+                            const meta = cell.column.columnDef.meta as {
+                              showInTable?: boolean;
+                            };
                             // Always show 'select' column
-                            if (cell.column.id === 'select') return true;
+                            if (cell.column.id === "select") return true;
                             return meta?.showInTable;
                           })
                           .map((cell) => {
                             const accessorKey = (
                               cell.column.columnDef as { accessorKey?: string }
                             )?.accessorKey;
-                            const headerLabel =
-                              typeof cell.column.columnDef.header === "string"
-                                ? cell.column.columnDef.header
-                                : cell.column.id;
+
                             const isBoolean =
                               accessorKey &&
                               columnTypes[accessorKey] === "boolean";
@@ -339,7 +349,7 @@ export function DataTable<TData extends FieldValues, TValue>({
                                 className="flex justify-between items-center text-base py-1"
                               >
                                 <span className="font-semibold text-gray-200 mr-2">
-                                  {headerLabel}
+                                  {getColumnLabel(cell.column)}
                                 </span>
                                 <span className="text-white">
                                   {isBoolean ? (
@@ -384,43 +394,49 @@ export function DataTable<TData extends FieldValues, TValue>({
                         data-state={row.getIsSelected() && "selected"}
                         className="hidden md:table-row"
                       >
-                        {row.getVisibleCells().filter((cell) => {
-                          const meta = cell.column.columnDef.meta as { showInTable?: boolean };
-                          // Always show 'select' column
-                          if (cell.column.id === 'select') return true;
-                          return meta?.showInTable;
-                        }).map((cell) => {
-                          const accessorKey = (
-                            cell.column.columnDef as { accessorKey?: string }
-                          )?.accessorKey;
-                          const isBoolean =
-                            accessorKey && columnTypes[accessorKey] === "boolean";
-                          const value = cell.getValue();
-                          return (
-                            <TableCell
-                              key={cell.id}
-                              className="px-2 py-2 md:px-4 md:py-3"
-                            >
-                              {isBoolean ? (
-                                <Badge
-                                  className={
-                                    value
-                                      ? "bg-green-600 text-white"
-                                      : undefined
-                                  }
-                                  variant={value ? "default" : "destructive"}
-                                >
-                                  {value ? "Yes" : "No"}
-                                </Badge>
-                              ) : (
-                                flexRender(
-                                  cell.column.columnDef.cell,
-                                  cell.getContext()
-                                )
-                              )}
-                            </TableCell>
-                          );
-                        })}
+                        {row
+                          .getVisibleCells()
+                          .filter((cell) => {
+                            const meta = cell.column.columnDef.meta as {
+                              showInTable?: boolean;
+                            };
+                            // Always show 'select' column
+                            if (cell.column.id === "select") return true;
+                            return meta?.showInTable;
+                          })
+                          .map((cell) => {
+                            const accessorKey = (
+                              cell.column.columnDef as { accessorKey?: string }
+                            )?.accessorKey;
+                            const isBoolean =
+                              accessorKey &&
+                              columnTypes[accessorKey] === "boolean";
+                            const value = cell.getValue();
+                            return (
+                              <TableCell
+                                key={cell.id}
+                                className="px-2 py-2 md:px-4 md:py-3"
+                              >
+                                {isBoolean ? (
+                                  <Badge
+                                    className={
+                                      value
+                                        ? "bg-green-600 text-white"
+                                        : undefined
+                                    }
+                                    variant={value ? "default" : "destructive"}
+                                  >
+                                    {value ? "Yes" : "No"}
+                                  </Badge>
+                                ) : (
+                                  flexRender(
+                                    cell.column.columnDef.cell,
+                                    cell.getContext()
+                                  )
+                                )}
+                              </TableCell>
+                            );
+                          })}
                         <TableCell className="px-2 py-2 md:px-4 md:py-3">
                           <Button
                             size="sm"
