@@ -48,11 +48,13 @@ import { Badge } from "@/components/ui/badge";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   tableName: string;
+  excludeColumns?: string[];
 }
 
 export function DataTable<TData extends FieldValues, TValue>({
   columns,
   tableName,
+  excludeColumns = ["select", "id"], // Only exclude 'select' and 'id' by default
 }: DataTableProps<TData, TValue>) {
   const queryClient = useQueryClient();
   const { data: tableData, refetch } = useInfiniteQuery({
@@ -313,13 +315,11 @@ export function DataTable<TData extends FieldValues, TValue>({
                         {row
                           .getVisibleCells()
                           .filter((cell) => {
-                            const key = (
-                              cell.column.columnDef as { accessorKey?: string }
-                            )?.accessorKey;
-                            // Hide only select, created_at, and id
+                            const key = (cell.column.columnDef as { accessorKey?: string })?.accessorKey;
+                            // Always show 'select' column (checkbox)
+                            if (cell.column.id === 'select') return true;
                             if (!key) return false;
-                            if (["select", "created_at", "id"].includes(key))
-                              return false;
+                            if (excludeColumns.includes(key)) return false;
                             return true;
                           })
                           .map((cell) => {
@@ -385,7 +385,14 @@ export function DataTable<TData extends FieldValues, TValue>({
                         data-state={row.getIsSelected() && "selected"}
                         className="hidden md:table-row"
                       >
-                        {row.getVisibleCells().map((cell) => {
+                        {row.getVisibleCells().filter((cell) => {
+                          const key = (cell.column.columnDef as { accessorKey?: string })?.accessorKey;
+                          // Always show 'select' column (checkbox)
+                          if (cell.column.id === 'select') return true;
+                          if (!key) return false;
+                          if (excludeColumns.includes(key)) return false;
+                          return true;
+                        }).map((cell) => {
                           const accessorKey = (
                             cell.column.columnDef as { accessorKey?: string }
                           )?.accessorKey;

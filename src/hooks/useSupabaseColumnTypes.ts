@@ -20,6 +20,14 @@ export function useSupabaseColumnTypes(tableName: string) {
             col.data_type === "bigint"
           )
             types[col.column_name] = "number";
+          else if (
+            col.data_type === "date" ||
+            col.data_type === "timestamp" ||
+            col.data_type === "timestamptz" ||
+            col.data_type === "timestamp without time zone" ||
+            col.data_type === "timestamp with time zone"
+          )
+            types[col.column_name] = "date";
           else types[col.column_name] = "text";
         });
         setColumnTypes(types);
