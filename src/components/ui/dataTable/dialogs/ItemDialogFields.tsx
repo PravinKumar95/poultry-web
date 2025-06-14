@@ -75,7 +75,17 @@ export function ItemDialogFields<TData>({
           <div key={header.id} className="grid gap-2">
             {colType === "boolean" ? (
               <div className="flex items-center gap-2">
-                <Checkbox id={accessorKey} {...register(accessorKey)} />
+                <Controller
+                  name={accessorKey}
+                  control={control}
+                  render={({ field }) => (
+                    <Checkbox
+                      id={accessorKey}
+                      checked={field.value || false}
+                      onCheckedChange={(checked) => field.onChange(!!checked)}
+                    />
+                  )}
+                />
                 <span
                   className="text-sm font-medium cursor-pointer select-none"
                   onClick={() => document.getElementById(accessorKey)?.click()}
