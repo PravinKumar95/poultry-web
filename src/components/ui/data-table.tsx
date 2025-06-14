@@ -48,13 +48,11 @@ import { Badge } from "@/components/ui/badge";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   tableName: string;
-  excludeColumns?: string[];
 }
 
 export function DataTable<TData extends FieldValues, TValue>({
   columns,
-  tableName,
-  excludeColumns = ["select", "id"], // Only exclude 'select' and 'id' by default
+  tableName
 }: DataTableProps<TData, TValue>) {
   const queryClient = useQueryClient();
   const { data: tableData, refetch } = useInfiniteQuery({
@@ -282,21 +280,24 @@ export function DataTable<TData extends FieldValues, TValue>({
           <TableHeader className="hidden md:table-header-group">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead
-                      key={header.id}
-                      className="px-2 py-2 md:px-4 md:py-3"
-                    >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  );
-                })}
+                {headerGroup.headers.filter((header) => {
+                  const meta = header.column.columnDef.meta as { showInTable?: boolean };
+                  // Always show 'select' column
+                  if (header.column.id === 'select') return true;
+                  return meta?.showInTable;
+                }).map((header) => (
+                  <TableHead
+                    key={header.id}
+                    className="px-2 py-2 md:px-4 md:py-3"
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
+                ))}
               </TableRow>
             ))}
           </TableHeader>
@@ -315,12 +316,10 @@ export function DataTable<TData extends FieldValues, TValue>({
                         {row
                           .getVisibleCells()
                           .filter((cell) => {
-                            const key = (cell.column.columnDef as { accessorKey?: string })?.accessorKey;
-                            // Always show 'select' column (checkbox)
+                            const meta = cell.column.columnDef.meta as { showInTable?: boolean };
+                            // Always show 'select' column
                             if (cell.column.id === 'select') return true;
-                            if (!key) return false;
-                            if (excludeColumns.includes(key)) return false;
-                            return true;
+                            return meta?.showInTable;
                           })
                           .map((cell) => {
                             const accessorKey = (
@@ -386,19 +385,16 @@ export function DataTable<TData extends FieldValues, TValue>({
                         className="hidden md:table-row"
                       >
                         {row.getVisibleCells().filter((cell) => {
-                          const key = (cell.column.columnDef as { accessorKey?: string })?.accessorKey;
-                          // Always show 'select' column (checkbox)
+                          const meta = cell.column.columnDef.meta as { showInTable?: boolean };
+                          // Always show 'select' column
                           if (cell.column.id === 'select') return true;
-                          if (!key) return false;
-                          if (excludeColumns.includes(key)) return false;
-                          return true;
+                          return meta?.showInTable;
                         }).map((cell) => {
                           const accessorKey = (
                             cell.column.columnDef as { accessorKey?: string }
                           )?.accessorKey;
                           const isBoolean =
-                            accessorKey &&
-                            columnTypes[accessorKey] === "boolean";
+                            accessorKey && columnTypes[accessorKey] === "boolean";
                           const value = cell.getValue();
                           return (
                             <TableCell

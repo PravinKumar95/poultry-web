@@ -43,7 +43,7 @@ const AddItemDialog: <TData>({
           <DialogTitle>Add </DialogTitle>
         </DialogHeader>
         <form>
-          <ItemDialogFields table={table} columnTypes={columnTypes} />
+          <ItemDialogFields table={table} columnTypes={columnTypes} mode="add" />
           <DialogFooter className="sm:justify-end">
             <DialogClose asChild>
               <Button variant="outline" type="button">
