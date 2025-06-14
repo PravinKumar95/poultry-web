@@ -19,7 +19,25 @@ export function ItemDialogFields<TData>({
   return (
     <div className="grid gap-4 py-2">
       {table.getFlatHeaders().map((header) => {
-        const headerText = header.isPlaceholder ? null : header.id;
+        // Prefer columnDef.header if it's a string, or if it's a function/component with a 'title' prop
+        let headerText = header.id;
+        const colDefHeader = header.column.columnDef.header;
+        if (typeof colDefHeader === "string") {
+          headerText = colDefHeader;
+        } else if (
+          colDefHeader &&
+          typeof colDefHeader === "function" &&
+          colDefHeader.name === "DataTableColumnHeader"
+        ) {
+          // Try to extract title from props if possible
+          const meta = header.column.columnDef.meta as any;
+          if (meta && meta.title) headerText = meta.title;
+        } else if (
+          header.column.columnDef.meta &&
+          (header.column.columnDef.meta as any).title
+        ) {
+          headerText = (header.column.columnDef.meta as any).title;
+        }
         const accessorKey =
           (header.column.columnDef as { accessorKey?: string }).accessorKey ||
           "";
@@ -37,9 +55,7 @@ export function ItemDialogFields<TData>({
                 <Checkbox id={accessorKey} {...register(accessorKey)} />
                 <span
                   className="text-sm font-medium cursor-pointer select-none"
-                  onClick={() =>
-                    document.getElementById(accessorKey)?.click()
-                  }
+                  onClick={() => document.getElementById(accessorKey)?.click()}
                 >
                   {headerText}
                 </span>
