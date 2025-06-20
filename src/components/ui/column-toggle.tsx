@@ -13,6 +13,13 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
+interface DataTableColumnMeta {
+  title?: string;
+  showInTable?: boolean;
+  showInAdd?: boolean;
+  showInEdit?: boolean;
+}
+
 interface DataTableViewOptionsProps<TData> {
   table: Table<TData>;
 }
@@ -38,6 +45,16 @@ export function DataTableViewOptions<TData>({
               typeof column.accessorFn !== "undefined" && column.getCanHide()
           )
           .map((column) => {
+            // Use meta.title or header string for display name
+            let label: string | undefined;
+            const meta = column.columnDef?.meta as DataTableColumnMeta | undefined;
+            if (meta && typeof meta.title === "string") {
+              label = meta.title;
+            } else if (typeof column.columnDef?.header === "string") {
+              label = column.columnDef.header;
+            } else {
+              label = column.id;
+            }
             return (
               <DropdownMenuCheckboxItem
                 key={column.id}
@@ -45,7 +62,7 @@ export function DataTableViewOptions<TData>({
                 checked={column.getIsVisible()}
                 onCheckedChange={(value) => column.toggleVisibility(!!value)}
               >
-                {column.id}
+                {label}
               </DropdownMenuCheckboxItem>
             );
           })}
