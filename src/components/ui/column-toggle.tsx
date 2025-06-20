@@ -40,14 +40,22 @@ export function DataTableViewOptions<TData>({
         <DropdownMenuSeparator />
         {table
           .getAllColumns()
-          .filter(
-            (column) =>
-              typeof column.accessorFn !== "undefined" && column.getCanHide()
-          )
+          .filter((column) => {
+            const meta = column.columnDef?.meta as
+              | DataTableColumnMeta
+              | undefined;
+            return (
+              typeof column.accessorFn !== "undefined" &&
+              column.getCanHide() &&
+              meta?.showInTable !== false
+            );
+          })
           .map((column) => {
             // Use meta.title or header string for display name
             let label: string | undefined;
-            const meta = column.columnDef?.meta as DataTableColumnMeta | undefined;
+            const meta = column.columnDef?.meta as
+              | DataTableColumnMeta
+              | undefined;
             if (meta && typeof meta.title === "string") {
               label = meta.title;
             } else if (typeof column.columnDef?.header === "string") {
