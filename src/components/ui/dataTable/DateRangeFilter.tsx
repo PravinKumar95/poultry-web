@@ -3,6 +3,7 @@ import { Calendar } from "../calendar";
 import { Button } from "../button";
 import { Popover, PopoverContent, PopoverTrigger } from "../popover";
 import type { DateRange as DayPickerDateRange } from "react-day-picker";
+import { formatDateDDMMYYYY } from "@/utils/date";
 
 interface DateRange {
   from?: Date;
@@ -61,7 +62,9 @@ export function DateRangeFilter({
         <Button variant="outline" size="sm">
           {label ?? "Filter by date"}
           {value.from && value.to
-            ? `: ${value.from.toLocaleDateString()} - ${value.to.toLocaleDateString()}`
+            ? `: ${formatDateDDMMYYYY(value.from)} - ${formatDateDDMMYYYY(
+                value.to
+              )}`
             : ""}
         </Button>
       </PopoverTrigger>
@@ -84,6 +87,17 @@ export function DateRangeFilter({
             )}
           </select>
           <span className="text-xs text-muted-foreground">(Select month)</span>
+          <Button
+            variant="outline"
+            size="sm"
+            className="ml-2"
+            onClick={() => {
+              onChange({});
+              setOpen(false);
+            }}
+          >
+            Clear
+          </Button>
         </div>
         <Calendar
           mode="range"
