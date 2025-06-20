@@ -44,22 +44,31 @@ import {
 import { ApiService } from "@/api/ApiService";
 import { showSuccessToast, showErrorToast } from "@/components/ui/toast-util";
 import { Badge } from "@/components/ui/badge";
+import { DateRangeFilter } from "./dataTable/DateRangeFilter";
+
+interface DateRange {
+  from?: Date;
+  to?: Date;
+}
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   tableName: string;
+  dateRangeColumn?: string;
 }
 
-export function getColumnLabel(column: any) {
-  if (column.columnDef?.meta?.title) return column.columnDef.meta.title;
-  if (typeof column.columnDef?.header === "string")
-    return column.columnDef.header;
-  return column.columnDef?.id || column.columnDef?.accessorKey || "";
+function getColumnLabel<TData, TValue>(column: ColumnDef<TData, TValue>) {
+  // @ts-expect-error: meta is user-defined
+  if (column.meta?.title) return column.meta.title;
+  if (typeof column.header === "string") return column.header;
+  // @ts-expect-error: id/accessorKey may be present
+  return column.id ?? column.accessorKey ?? "";
 }
 
 export function DataTable<TData extends FieldValues, TValue>({
   columns,
   tableName,
+  dateRangeColumn,
 }: DataTableProps<TData, TValue>) {
   const queryClient = useQueryClient();
   const { data: tableData, refetch } = useInfiniteQuery({
@@ -143,8 +152,21 @@ export function DataTable<TData extends FieldValues, TValue>({
   const [addDialogOpen, setAddDialogOpen] = React.useState(false);
   const [editDialogOpen, setEditDialogOpen] = React.useState(false);
   const [editRow, setEditRow] = React.useState<TData | null>(null);
+  const [dateRange, setDateRange] = React.useState<DateRange>({});
+  // Filter data by dateRange if dateRangeColumn is provided
+  const filteredData = React.useMemo(() => {
+    if (!dateRangeColumn || !dateRange.from || !dateRange.to) {
+      return tableData?.pages?.[0] ?? [];
+    }
+    return (tableData?.pages?.[0] ?? []).filter((row) => {
+      const dateValue = (row as Record<string, unknown>)[dateRangeColumn];
+      const date = dateValue ? new Date(dateValue as string) : null;
+      if (!date) return false;
+      return date >= dateRange.from! && date <= dateRange.to!;
+    });
+  }, [tableData, dateRange, dateRangeColumn]);
   const table = useReactTable({
-    data: tableData?.pages[0] || [],
+    data: filteredData,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -267,7 +289,7 @@ export function DataTable<TData extends FieldValues, TValue>({
             table={table}
             columnTypes={columnTypes}
             onSave={handleEditSave}
-            defaultValues={editRow || {}}
+            defaultValues={editRow ?? {}}
           />
         </FormProvider>
         <Button
@@ -279,6 +301,20 @@ export function DataTable<TData extends FieldValues, TValue>({
           <Trash />
           Delete
         </Button>
+        <span className="mx-2" />
+        {dateRangeColumn && (
+          <DateRangeFilter
+            label={getColumnLabel(
+              columns.find(
+                (col) =>
+                  // @ts-expect-error: accessorKey is user-defined
+                  col.accessorKey === dateRangeColumn
+              ) ?? columns[0]
+            )}
+            value={dateRange}
+            onChange={setDateRange}
+          />
+        )}
         <DataTableViewOptions table={table} />
       </div>
       {/* Responsive table wrapper */}

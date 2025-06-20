@@ -3,7 +3,11 @@ import { feedInventoryColumns } from "./columns";
 
 const FeedInventory = () => {
   return (
-    <DataTable columns={feedInventoryColumns} tableName="material_purchase" />
+    <DataTable
+      columns={feedInventoryColumns}
+      tableName="material_purchase"
+      dateRangeColumn="purchase_date"
+    />
   );
 };
 
