@@ -313,154 +313,77 @@ export function DataTable<TData extends FieldValues, TValue>({
             ))}
           </TableHeader>
           <TableBody>
-            {/* Mobile card-style rows */}
-            <>
-              {table.getRowModel().rows?.length ? (
-                <>
-                  {/* Card style for mobile */}
-                  <div className="block md:hidden max-h-[70vh] overflow-y-auto">
-                    {table.getRowModel().rows.map((row) => (
-                      <div
-                        key={row.id}
-                        className="bg-transparent border border-neutral-800 rounded-lg shadow-sm mb-4 p-4 flex flex-col gap-2"
-                      >
-                        {row
-                          .getVisibleCells()
-                          .filter((cell) => {
-                            const meta = cell.column.columnDef.meta as {
-                              showInTable?: boolean;
-                            };
-                            // Always show 'select' column
-                            if (cell.column.id === "select") return true;
-                            return meta?.showInTable;
-                          })
-                          .map((cell) => {
-                            const accessorKey = (
-                              cell.column.columnDef as { accessorKey?: string }
-                            )?.accessorKey;
-
-                            const isBoolean =
-                              accessorKey &&
-                              columnTypes[accessorKey] === "boolean";
-                            const value = cell.getValue();
-                            return (
-                              <div
-                                key={cell.id}
-                                className="flex justify-between items-center text-base py-1"
-                              >
-                                <span className="font-semibold text-gray-200 mr-2">
-                                  {getColumnLabel(cell.column)}
-                                </span>
-                                <span className="text-white">
-                                  {isBoolean ? (
-                                    <Badge
-                                      className={
-                                        value
-                                          ? "bg-green-600 text-white"
-                                          : undefined
-                                      }
-                                      variant={
-                                        value ? "default" : "destructive"
-                                      }
-                                    >
-                                      {value ? "Yes" : "No"}
-                                    </Badge>
-                                  ) : (
-                                    flexRender(
-                                      cell.column.columnDef.cell,
-                                      cell.getContext()
-                                    )
-                                  )}
-                                </span>
-                              </div>
-                            );
-                          })}
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="mt-3 w-full text-white border-neutral-700 hover:bg-neutral-800 focus:bg-neutral-800 active:bg-neutral-800"
-                          onClick={() => handleEdit(row.original)}
-                        >
-                          Edit
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                  {/* Table style for desktop */}
-                  <>
-                    {table.getRowModel().rows.map((row) => (
-                      <TableRow
-                        key={row.id}
-                        data-state={row.getIsSelected() && "selected"}
-                        className="hidden md:table-row"
-                      >
-                        {row
-                          .getVisibleCells()
-                          .filter((cell) => {
-                            const meta = cell.column.columnDef.meta as {
-                              showInTable?: boolean;
-                            };
-                            // Always show 'select' column
-                            if (cell.column.id === "select") return true;
-                            return meta?.showInTable;
-                          })
-                          .map((cell) => {
-                            const accessorKey = (
-                              cell.column.columnDef as { accessorKey?: string }
-                            )?.accessorKey;
-                            const isBoolean =
-                              accessorKey &&
-                              columnTypes[accessorKey] === "boolean";
-                            const value = cell.getValue();
-                            return (
-                              <TableCell
-                                key={cell.id}
-                                className="px-2 py-2 md:px-4 md:py-3"
-                              >
-                                {isBoolean ? (
-                                  <Badge
-                                    className={
-                                      value
-                                        ? "bg-green-600 text-white"
-                                        : undefined
-                                    }
-                                    variant={value ? "default" : "destructive"}
-                                  >
-                                    {value ? "Yes" : "No"}
-                                  </Badge>
-                                ) : (
-                                  flexRender(
-                                    cell.column.columnDef.cell,
-                                    cell.getContext()
-                                  )
-                                )}
-                              </TableCell>
-                            );
-                          })}
-                        <TableCell className="px-2 py-2 md:px-4 md:py-3">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEdit(row.original)}
-                          >
-                            Edit
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </>
-                </>
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
+            {/* Only table rows, no mobile card-style rows */}
+            {table.getRowModel().rows?.length ? (
+              <>
+                {table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                    className="table-row"
                   >
-                    No results.
-                  </TableCell>
-                </TableRow>
-              )}
-            </>
+                    {row
+                      .getVisibleCells()
+                      .filter((cell) => {
+                        const meta = cell.column.columnDef.meta as {
+                          showInTable?: boolean;
+                        };
+                        // Always show 'select' column
+                        if (cell.column.id === "select") return true;
+                        return meta?.showInTable;
+                      })
+                      .map((cell) => {
+                        const accessorKey = (
+                          cell.column.columnDef as { accessorKey?: string }
+                        )?.accessorKey;
+                        const isBoolean =
+                          accessorKey && columnTypes[accessorKey] === "boolean";
+                        const value = cell.getValue();
+                        return (
+                          <TableCell
+                            key={cell.id}
+                            className="px-2 py-2 md:px-4 md:py-3"
+                          >
+                            {isBoolean ? (
+                              <Badge
+                                className={
+                                  value ? "bg-green-600 text-white" : undefined
+                                }
+                                variant={value ? "default" : "destructive"}
+                              >
+                                {value ? "Yes" : "No"}
+                              </Badge>
+                            ) : (
+                              flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext()
+                              )
+                            )}
+                          </TableCell>
+                        );
+                      })}
+                    <TableCell className="px-2 py-2 md:px-4 md:py-3">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEdit(row.original)}
+                      >
+                        Edit
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </>
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  No results.
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>
