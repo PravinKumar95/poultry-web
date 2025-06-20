@@ -200,7 +200,12 @@ export function DataTable<TData extends FieldValues, TValue>({
     // Extract the actual database IDs from the selected rows
     const selectedRowIds = selectedRows.map((row) => row.original.id);
     if (selectedRowIds.length > 0) {
-      deleteMutation.mutate(selectedRowIds);
+      deleteMutation.mutate(selectedRowIds, {
+        onSuccess: () => {
+          // Clear selection after delete
+          setRowSelection({});
+        },
+      });
     }
   };
   const handleEdit = (row: TData) => {
