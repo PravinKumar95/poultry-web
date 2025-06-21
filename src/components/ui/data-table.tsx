@@ -42,6 +42,13 @@ import { showSuccessToast, showErrorToast } from "@/components/ui/toast-util";
 import { Badge } from "@/components/ui/badge";
 import { DateRangeFilter } from "./dataTable/DateRangeFilter";
 import { Input } from "./input";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "./select";
 
 interface DateRange {
   from?: Date;
@@ -467,38 +474,73 @@ export function DataTable<TData extends FieldValues, TValue>({
           </TableBody>
         </Table>
       </div>
-      <div className="space-x-2 py-4 flex items-center">
-        <Button
-          size="sm"
-          onClick={() => setPage((p) => Math.max(1, p - 1))}
-          disabled={page === 1}
-        >
-          Prev
-        </Button>
-        <span>
-          Page {page} of {Math.ceil((data?.total ?? 0) / pageSize) || 1}
-        </span>
-        <Button
-          size="sm"
-          onClick={() => setPage((p) => p + 1)}
-          disabled={page * pageSize >= (data?.total ?? 0)}
-        >
-          Next
-        </Button>
-        <select
-          value={pageSize}
-          onChange={(e) => {
-            setPageSize(Number(e.target.value));
-            setPage(1);
-          }}
-          className="ml-2 border px-2 py-1 rounded text-sm"
-        >
-          {[10, 20, 50, 100].map((size) => (
-            <option key={size} value={size}>
-              {size} / page
-            </option>
-          ))}
-        </select>
+      <div className="flex flex-row flex-wrap items-center justify-between py-4 gap-4">
+        <div className="text-sm text-muted-foreground">
+          {Object.keys(rowSelection).length} of {data?.total ?? 0} row(s)
+          selected.
+        </div>
+        <div className="flex items-center gap-4">
+          <span className="text-sm">Rows per page</span>
+          <Select
+            value={String(pageSize)}
+            onValueChange={(value) => {
+              setPageSize(Number(value));
+              setPage(1);
+            }}
+          >
+            <SelectTrigger className="w-[120px]">
+              <span>{pageSize}</span>
+            </SelectTrigger>
+            <SelectContent>
+              {[10, 20, 50, 100].map((size) => (
+                <SelectItem key={size} value={String(size)}>
+                  {size}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <span className="text-sm">
+            Page
+            <span className="inline-block font-bold px-2 py-1 rounded bg-accent text-accent-foreground mx-1 border border-accent">
+              {page}
+            </span>
+            of {Math.ceil((data?.total ?? 0) / pageSize) || 1}
+          </span>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => setPage(1)}
+            disabled={page === 1}
+          >
+            &laquo;
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >
+            &lsaquo;
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => setPage((p) => p + 1)}
+            disabled={page * pageSize >= (data?.total ?? 0)}
+          >
+            &rsaquo;
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() =>
+              setPage(Math.ceil((data?.total ?? 0) / pageSize) || 1)
+            }
+            disabled={page * pageSize >= (data?.total ?? 0)}
+          >
+            &raquo;
+          </Button>
+        </div>
       </div>
     </div>
   );
