@@ -41,6 +41,7 @@ import { ApiService } from "@/api/ApiService";
 import { showSuccessToast, showErrorToast } from "@/components/ui/toast-util";
 import { Badge } from "@/components/ui/badge";
 import { DateRangeFilter } from "./dataTable/DateRangeFilter";
+import { Input } from "./input";
 
 interface DateRange {
   from?: Date;
@@ -281,34 +282,70 @@ export function DataTable<TData extends FieldValues, TValue>({
   }, []);
   return (
     <div>
-      <div className="flex flex-wrap gap-2 py-2 items-center">
-        <input
-          type="text"
-          placeholder="Search..."
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1);
-          }}
-          className="border px-2 py-1 rounded text-sm"
-        />
-        <FormProvider {...addForm}>
-          <AddItemDialog
-            open={addDialogOpen}
-            onOpenChange={setAddDialogOpen}
-            trigger={
-              <Button size="sm" className="mx-2">
-                <Plus />
-                Add
-              </Button>
-            }
-            table={table}
-            columnTypes={columnTypes}
-            onSave={addForm.handleSubmit((values) => {
-              handleAdd(values);
-            })}
+      <div className="flex flex-col gap-2 py-2 w-full">
+        <div className="w-full">
+          <Input
+            type="text"
+            placeholder="Search..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            className="border px-2 py-1 rounded text-sm w-full"
           />
-        </FormProvider>
+        </div>
+        <div className="flex flex-row flex-nowrap gap-2 w-full items-stretch sm:items-center justify-between">
+          <div className="flex flex-row gap-2 flex-shrink-0">
+            <FormProvider {...addForm}>
+              <AddItemDialog
+                open={addDialogOpen}
+                onOpenChange={setAddDialogOpen}
+                trigger={
+                  <Button size="sm" className="w-full sm:w-auto">
+                    <Plus />
+                    Add
+                  </Button>
+                }
+                table={table}
+                columnTypes={columnTypes}
+                onSave={addForm.handleSubmit((values) => {
+                  handleAdd(values);
+                })}
+              />
+            </FormProvider>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={Object.keys(rowSelection).length === 0}
+              className="w-full sm:w-auto"
+            >
+              <Trash />
+              Delete
+            </Button>
+          </div>
+          <div className="flex flex-row gap-2 flex-shrink-0">
+            {dateRangeColumn && (
+              <div className="min-w-[150px]">
+                <DateRangeFilter
+                  label={getColumnLabel(
+                    columns.find(
+                      (col) =>
+                        // @ts-expect-error: accessorKey is user-defined
+                        col.accessorKey === dateRangeColumn
+                    ) ?? columns[0]
+                  )}
+                  value={dateRange}
+                  onChange={setDateRange}
+                />
+              </div>
+            )}
+            <div>
+              <DataTableViewOptions table={table} />
+            </div>
+          </div>
+        </div>
         <FormProvider {...editForm}>
           <EditItemDialog
             open={editDialogOpen}
@@ -323,30 +360,6 @@ export function DataTable<TData extends FieldValues, TValue>({
             defaultValues={editRow ?? {}}
           />
         </FormProvider>
-        <Button
-          size="sm"
-          variant="destructive"
-          onClick={handleDelete}
-          disabled={Object.keys(rowSelection).length === 0}
-        >
-          <Trash />
-          Delete
-        </Button>
-        <span className="mx-2" />
-        {dateRangeColumn && (
-          <DateRangeFilter
-            label={getColumnLabel(
-              columns.find(
-                (col) =>
-                  // @ts-expect-error: accessorKey is user-defined
-                  col.accessorKey === dateRangeColumn
-              ) ?? columns[0]
-            )}
-            value={dateRange}
-            onChange={setDateRange}
-          />
-        )}
-        <DataTableViewOptions table={table} />
       </div>
       {/* Responsive table wrapper */}
       <div className="rounded-md border overflow-x-auto">
