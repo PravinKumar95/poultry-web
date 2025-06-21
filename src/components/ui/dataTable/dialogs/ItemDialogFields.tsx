@@ -32,6 +32,25 @@ export function ItemDialogFields<TData>({
     reset();
   }, [mode, reset]);
 
+  // Set default date values for date fields in add mode (only once per mount or mode change)
+  useEffect(() => {
+    if (mode === "add") {
+      table.getFlatHeaders().forEach((header) => {
+        const accessorKey =
+          (header.column.columnDef as { accessorKey?: string }).accessorKey ||
+          "";
+        const colType = columnTypes[accessorKey];
+        if (colType === "date") {
+          const currentValue = getValues(accessorKey);
+          if (!currentValue) {
+            setValue(accessorKey, getTodayDateString());
+          }
+        }
+      });
+    }
+    // Only run when mode, table, or columnTypes change
+  }, [mode, table, columnTypes, getValues, setValue]);
+
   return (
     <div className="grid gap-4 py-2">
       {table.getFlatHeaders().map((header) => {
@@ -64,13 +83,6 @@ export function ItemDialogFields<TData>({
         const show = mode === "add" ? meta?.showInAdd : meta?.showInEdit;
         if (!show || !accessorKey) return null;
         const colType = columnTypes[accessorKey];
-        // Set default value for date field in add mode
-        if (colType === "date" && mode === "add") {
-          const currentValue = getValues(accessorKey);
-          if (!currentValue) {
-            setValue(accessorKey, getTodayDateString());
-          }
-        }
         return (
           <div key={header.id} className="grid gap-2">
             {colType === "boolean" ? (
