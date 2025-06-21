@@ -36,11 +36,7 @@ import {
   SubmitHandler,
   useForm,
 } from "react-hook-form";
-import {
-  useInfiniteQuery,
-  useMutation,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiService } from "@/api/ApiService";
 import { showSuccessToast, showErrorToast } from "@/components/ui/toast-util";
 import { Badge } from "@/components/ui/badge";
@@ -71,17 +67,38 @@ export function DataTable<TData extends FieldValues, TValue>({
   dateRangeColumn,
 }: DataTableProps<TData, TValue>) {
   const queryClient = useQueryClient();
-  const { data: tableData, refetch } = useInfiniteQuery({
-    queryKey: ["tableQuery", tableName],
-    queryFn: async (): Promise<TData[]> => {
-      return ApiService.fetchTable(tableName);
-    },
-    getNextPageParam: (lastPage, pages) => {
-      return lastPage.length ? pages.length : undefined;
-    },
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    initialPageParam: 0,
+  // Pagination and search state
+  const [page, setPage] = React.useState(1);
+  const [pageSize, setPageSize] = React.useState(10);
+  const [search, setSearch] = React.useState("");
+  const [searchColumn] = React.useState<string>(
+    columns.find((col) => (col as any).accessorKey)?.accessorKey ?? ""
+  );
+  const [dateRange, setDateRange] = React.useState<DateRange>({});
+
+  // Fetch paginated data
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: [
+      "tableQuery",
+      tableName,
+      page,
+      pageSize,
+      search,
+      searchColumn,
+      dateRange,
+      dateRangeColumn,
+    ],
+    queryFn: () =>
+      ApiService.fetchTable({
+        tableName,
+        page,
+        pageSize,
+        search,
+        searchColumn,
+        dateRange,
+        dateRangeColumn,
+      }),
+    keepPreviousData: true,
   });
   const addMutation = useMutation({
     mutationKey: ["tableAddMut", tableName],
@@ -152,19 +169,18 @@ export function DataTable<TData extends FieldValues, TValue>({
   const [addDialogOpen, setAddDialogOpen] = React.useState(false);
   const [editDialogOpen, setEditDialogOpen] = React.useState(false);
   const [editRow, setEditRow] = React.useState<TData | null>(null);
-  const [dateRange, setDateRange] = React.useState<DateRange>({});
   // Filter data by dateRange if dateRangeColumn is provided
   const filteredData = React.useMemo(() => {
     if (!dateRangeColumn || !dateRange.from || !dateRange.to) {
-      return tableData?.pages?.[0] ?? [];
+      return data?.data ?? [];
     }
-    return (tableData?.pages?.[0] ?? []).filter((row) => {
+    return (data?.data ?? []).filter((row) => {
       const dateValue = (row as Record<string, unknown>)[dateRangeColumn];
       const date = dateValue ? new Date(dateValue as string) : null;
       if (!date) return false;
       return date >= dateRange.from! && date <= dateRange.to!;
     });
-  }, [tableData, dateRange, dateRangeColumn]);
+  }, [data, dateRange, dateRangeColumn]);
   const table = useReactTable({
     data: filteredData,
     columns,
@@ -265,7 +281,17 @@ export function DataTable<TData extends FieldValues, TValue>({
   }, []);
   return (
     <div>
-      <div className="flex flex-wrap gap-2 py-2">
+      <div className="flex flex-wrap gap-2 py-2 items-center">
+        <input
+          type="text"
+          placeholder="Search..."
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
+          className="border px-2 py-1 rounded text-sm"
+        />
         <FormProvider {...addForm}>
           <AddItemDialog
             open={addDialogOpen}
@@ -428,8 +454,38 @@ export function DataTable<TData extends FieldValues, TValue>({
           </TableBody>
         </Table>
       </div>
-      <div className="space-x-2 py-4">
-        <DataTablePagination table={table} />
+      <div className="space-x-2 py-4 flex items-center">
+        <Button
+          size="sm"
+          onClick={() => setPage((p) => Math.max(1, p - 1))}
+          disabled={page === 1}
+        >
+          Prev
+        </Button>
+        <span>
+          Page {page} of {Math.ceil((data?.total ?? 0) / pageSize) || 1}
+        </span>
+        <Button
+          size="sm"
+          onClick={() => setPage((p) => p + 1)}
+          disabled={page * pageSize >= (data?.total ?? 0)}
+        >
+          Next
+        </Button>
+        <select
+          value={pageSize}
+          onChange={(e) => {
+            setPageSize(Number(e.target.value));
+            setPage(1);
+          }}
+          className="ml-2 border px-2 py-1 rounded text-sm"
+        >
+          {[10, 20, 50, 100].map((size) => (
+            <option key={size} value={size}>
+              {size} / page
+            </option>
+          ))}
+        </select>
       </div>
     </div>
   );
