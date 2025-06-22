@@ -2,6 +2,7 @@ import * as React from "react";
 import { Calendar } from "../calendar";
 import { Button } from "../button";
 import { Popover, PopoverContent, PopoverTrigger } from "../popover";
+import { Select, SelectTrigger, SelectContent, SelectItem } from "../select";
 import type { DateRange as DayPickerDateRange } from "react-day-picker";
 import { formatDateDDMMYYYY } from "@/utils/date";
 
@@ -40,15 +41,6 @@ export function DateRangeFilter({
     return { month: now.getMonth(), year: now.getFullYear() };
   });
 
-  const handleMonthSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const [year, month] = e.target.value.split("-").map(Number);
-    const from = new Date(year, month, 1);
-    const to = new Date(year, month + 1, 0); // last day of month
-    onChange({ from, to });
-    setMonthYear({ month, year });
-    setOpen(false);
-  };
-
   // Generate options for the last 5 years including current
   const yearOptions = Array.from(
     { length: 5 },
@@ -70,22 +62,38 @@ export function DateRangeFilter({
       </PopoverTrigger>
       <PopoverContent align="start" className="w-auto p-0">
         <div className="flex items-center gap-2 px-3 pt-3 pb-1">
-          <select
-            className="border rounded px-2 py-1 text-sm"
+          <Select
             value={`${monthYear.year}-${monthYear.month}`}
-            onChange={handleMonthSelect}
+            onValueChange={(val) => {
+              const [year, month] = val.split("-").map(Number);
+              const from = new Date(year, month, 1);
+              const to = new Date(year, month + 1, 0);
+              onChange({ from, to });
+              setMonthYear({ month, year });
+              setOpen(false);
+            }}
           >
-            {yearOptions.map((year) =>
-              monthOptions.map((month) => (
-                <option
-                  key={`${year}-${month.value}`}
-                  value={`${year}-${month.value}`}
-                >
-                  {month.label} {year}
-                </option>
-              ))
-            )}
-          </select>
+            <SelectTrigger className="min-w-[140px]">
+              {(() => {
+                const month = monthOptions.find(
+                  (m) => m.value === monthYear.month
+                );
+                return `${month ? month.label : ""} ${monthYear.year}`;
+              })()}
+            </SelectTrigger>
+            <SelectContent>
+              {yearOptions.map((year) =>
+                monthOptions.map((month) => (
+                  <SelectItem
+                    key={`${year}-${month.value}`}
+                    value={`${year}-${month.value}`}
+                  >
+                    {month.label} {year}
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
           <span className="text-xs text-muted-foreground">(Select month)</span>
           <Button
             variant="outline"
