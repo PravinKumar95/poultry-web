@@ -23,7 +23,6 @@ import {
 } from "@/components/ui/table";
 
 import React from "react";
-import { DataTablePagination } from "./pagination";
 import { DataTableViewOptions } from "./column-toggle";
 import { Button } from "./button";
 import { Plus, Trash } from "lucide-react";
@@ -42,13 +41,7 @@ import { showSuccessToast, showErrorToast } from "@/components/ui/toast-util";
 import { Badge } from "@/components/ui/badge";
 import { DateRangeFilter } from "./dataTable/DateRangeFilter";
 import { Input } from "./input";
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from "./select";
+import { Select, SelectTrigger, SelectContent, SelectItem } from "./select";
 
 interface DateRange {
   from?: Date;
@@ -69,6 +62,26 @@ function getColumnLabel<TData, TValue>(column: ColumnDef<TData, TValue>) {
   return column.id ?? column.accessorKey ?? "";
 }
 
+// Type guard for columns with accessorKey
+function hasAccessorKey<TData, TValue>(
+  col: ColumnDef<TData, TValue>
+): col is ColumnDef<TData, TValue> & { accessorKey: string } {
+  return (
+    typeof (col as unknown as { accessorKey?: unknown }).accessorKey ===
+    "string"
+  );
+}
+
+// Type guard for objects with an id property
+function hasId(obj: unknown): obj is { id: string | number } {
+  return (
+    typeof obj === "object" &&
+    obj !== null &&
+    "id" in obj &&
+    (typeof (obj as any).id === "string" || typeof (obj as any).id === "number")
+  );
+}
+
 export function DataTable<TData extends FieldValues, TValue>({
   columns,
   tableName,
@@ -79,13 +92,14 @@ export function DataTable<TData extends FieldValues, TValue>({
   const [page, setPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(10);
   const [search, setSearch] = React.useState("");
-  const [searchColumn] = React.useState<string>(
-    columns.find((col) => (col as any).accessorKey)?.accessorKey ?? ""
-  );
+  const [searchColumn] = React.useState<string>(() => {
+    const col = columns.find(hasAccessorKey);
+    return col ? col.accessorKey : "";
+  });
   const [dateRange, setDateRange] = React.useState<DateRange>({});
 
   // Fetch paginated data
-  const { data, isLoading, refetch } = useQuery({
+  const { data, refetch } = useQuery({
     queryKey: [
       "tableQuery",
       tableName,
@@ -106,7 +120,6 @@ export function DataTable<TData extends FieldValues, TValue>({
         dateRange,
         dateRangeColumn,
       }),
-    keepPreviousData: true,
   });
   const addMutation = useMutation({
     mutationKey: ["tableAddMut", tableName],
@@ -118,7 +131,9 @@ export function DataTable<TData extends FieldValues, TValue>({
         "Added successfully!",
         "The item was added to the table."
       );
-      queryClient.invalidateQueries({ queryKey: ["tableQuery", tableName] });
+      void queryClient.invalidateQueries({
+        queryKey: ["tableQuery", tableName],
+      });
     },
     onError: (error) => {
       showErrorToast(
@@ -130,7 +145,7 @@ export function DataTable<TData extends FieldValues, TValue>({
   });
   const deleteMutation = useMutation({
     mutationKey: ["tableDeleteMut", tableName],
-    mutationFn: async (ids: Array<string | number>) => {
+    mutationFn: async (ids: (string | number)[]) => {
       return ApiService.deleteRows(tableName, ids);
     },
     onSuccess: () => {
@@ -138,7 +153,9 @@ export function DataTable<TData extends FieldValues, TValue>({
         "Deleted successfully!",
         "The selected item(s) were deleted."
       );
-      queryClient.invalidateQueries({ queryKey: ["tableQuery", tableName] });
+      void queryClient.invalidateQueries({
+        queryKey: ["tableQuery", tableName],
+      });
     },
     onError: (error) => {
       showErrorToast(
@@ -158,7 +175,9 @@ export function DataTable<TData extends FieldValues, TValue>({
     },
     onSuccess: () => {
       showSuccessToast("Updated successfully!", "The item was updated.");
-      queryClient.invalidateQueries({ queryKey: ["tableQuery", tableName] });
+      void queryClient.invalidateQueries({
+        queryKey: ["tableQuery", tableName],
+      });
     },
     onError: (error) => {
       showErrorToast(
@@ -222,7 +241,12 @@ export function DataTable<TData extends FieldValues, TValue>({
     // Get selected rows from the table
     const selectedRows = table.getSelectedRowModel().rows;
     // Extract the actual database IDs from the selected rows
-    const selectedRowIds = selectedRows.map((row) => row.original.id);
+    const selectedRowIds: (string | number)[] = selectedRows
+      .map((row) => {
+        const original = row.original as { id?: string | number };
+        return original.id;
+      })
+      .filter((id): id is string | number => id !== undefined);
     if (selectedRowIds.length > 0) {
       deleteMutation.mutate(selectedRowIds, {
         onSuccess: () => {
@@ -239,17 +263,17 @@ export function DataTable<TData extends FieldValues, TValue>({
     setTimeout(() => editForm.reset({ ...row }), 0);
   };
   const handleEditSave = editForm.handleSubmit((values) => {
-    if (editRow && (editRow as any).id) {
+    if (editRow && hasId(editRow)) {
       const computedColumns = ["amount"];
       const neverUpdate = ["created_at", "tenant_id", "id"];
-      let filtered = Object.fromEntries(
+      const filtered = Object.fromEntries(
         Object.entries(values).filter(
           ([key, value]) =>
             !computedColumns.includes(key) &&
             !neverUpdate.includes(key) &&
             value !== null &&
             value !== undefined &&
-            String(value) !== String((editRow as any)[key])
+            String(value) !== String((editRow as Record<string, unknown>)[key])
         )
       );
       for (const key in filtered) {
@@ -264,28 +288,30 @@ export function DataTable<TData extends FieldValues, TValue>({
         return;
       }
       const payload = Object.assign({}, filtered, {
-        id: (editRow as any).id,
+        id: editRow.id,
       }) as Partial<TData> & { id: string | number };
       updateMutation.mutate(payload, {
         onSuccess: () => {
           setEditDialogOpen(false);
           setEditRow(null);
           editForm.reset();
-          refetch();
+          void refetch();
         },
         onError: () => {
           // Optionally handle error here
         },
       });
     }
-  });
+  }) as () => void;
   React.useEffect(() => {
-    const handler = (e: any) => {
-      setEditRow(e.detail);
+    const handler = (e: Event) => {
+      const customEvent = e as CustomEvent<TData>;
+      setEditRow(customEvent.detail);
       setEditDialogOpen(true);
     };
-    window.addEventListener("open-edit-dialog", handler);
-    return () => window.removeEventListener("open-edit-dialog", handler);
+    window.addEventListener("open-edit-dialog", handler as EventListener);
+    return () =>
+      window.removeEventListener("open-edit-dialog", handler as EventListener);
   }, []);
   return (
     <div>
@@ -316,9 +342,11 @@ export function DataTable<TData extends FieldValues, TValue>({
                 }
                 table={table}
                 columnTypes={columnTypes}
-                onSave={addForm.handleSubmit((values) => {
-                  handleAdd(values);
-                })}
+                onSave={
+                  addForm.handleSubmit((values) => {
+                    handleAdd(values);
+                  }) as () => void
+                }
               />
             </FormProvider>
             <Button
@@ -337,11 +365,20 @@ export function DataTable<TData extends FieldValues, TValue>({
               <div className="min-w-[150px]">
                 <DateRangeFilter
                   label={getColumnLabel(
-                    columns.find(
-                      (col) =>
-                        // @ts-expect-error: accessorKey is user-defined
-                        col.accessorKey === dateRangeColumn
-                    ) ?? columns[0]
+                    (() => {
+                      const col = columns.find(
+                        (col) =>
+                          Object.prototype.hasOwnProperty.call(
+                            col,
+                            "accessorKey"
+                          ) &&
+                          typeof (col as { accessorKey?: unknown })
+                            .accessorKey === "string" &&
+                          (col as { accessorKey: string }).accessorKey ===
+                            dateRangeColumn
+                      );
+                      return col ?? columns[0];
+                    })()
                   )}
                   value={dateRange}
                   onChange={setDateRange}
@@ -453,7 +490,7 @@ export function DataTable<TData extends FieldValues, TValue>({
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleEdit(row.original)}
+                        onClick={() => handleEdit(row.original as TData)}
                       >
                         Edit
                       </Button>
