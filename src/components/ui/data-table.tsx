@@ -198,9 +198,9 @@ export function DataTable<TData extends FieldValues, TValue>({
   // Filter data by dateRange if dateRangeColumn is provided
   const filteredData = React.useMemo(() => {
     if (!dateRangeColumn || !dateRange.from || !dateRange.to) {
-      return data?.data ?? [];
+      return (data?.data ?? []) as TData[];
     }
-    return (data?.data ?? []).filter((row) => {
+    return ((data?.data ?? []) as TData[]).filter((row) => {
       const dateValue = (row as Record<string, unknown>)[dateRangeColumn];
       const date = dateValue ? new Date(dateValue as string) : null;
       if (!date) return false;
